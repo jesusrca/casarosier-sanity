@@ -1256,6 +1256,188 @@ app.delete("/make-server-0ba58e95/images/:fileName", verifyAuth, async (c) => {
   }
 });
 
+// ==================== EDIT LOCKS ENDPOINTS ====================
+
+// Helper to clean expired locks (inactive for more than 5 minutes)
+async function cleanExpiredLocks() {
+  try {
+    const locks = await kv.getByPrefix('lock:');
+    const now = Date.now();
+    const LOCK_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+
+    for (const lock of locks) {
+      const lastHeartbeat = new Date(lock.lastHeartbeat).getTime();
+      if (now - lastHeartbeat > LOCK_TIMEOUT) {
+        await kv.del(`lock:${lock.resourceId}`);
+        console.log(`Expired lock cleaned: ${lock.resourceId}`);
+      }
+    }
+  } catch (error) {
+    console.error('Error cleaning expired locks:', error);
+  }
+}
+
+// Get lock status for a resource (public - anyone can check)
+app.get("/make-server-0ba58e95/locks/:resource", async (c) => {
+  try {
+    const resource = c.req.param('resource');
+    const lock = await kv.get(`lock:${resource}`);
+    
+    if (!lock) {
+      return c.json({ locked: false, lock: null });
+    }
+
+    // Check if lock is expired
+    const lastHeartbeat = new Date(lock.lastHeartbeat).getTime();
+    const now = Date.now();
+    const LOCK_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+
+    if (now - lastHeartbeat > LOCK_TIMEOUT) {
+      // Lock expired, remove it
+      await kv.del(`lock:${resource}`);
+      return c.json({ locked: false, lock: null });
+    }
+
+    return c.json({ locked: true, lock });
+  } catch (error) {
+    console.error('Error checking lock:', error);
+    return c.json({ error: 'Error checking lock status' }, 500);
+  }
+});
+
+// Acquire lock (requires auth)
+app.post("/make-server-0ba58e95/locks/:resource", verifyAuth, async (c) => {
+  try {
+    const resource = c.req.param('resource');
+    const userId = c.get('userId');
+    const userEmail = c.get('userEmail');
+    
+    // Get user name from metadata
+    const userMeta = await kv.get(`user:${userId}`);
+    const userName = userMeta?.name || userEmail?.split('@')[0] || 'Usuario';
+
+    // Clean expired locks first
+    await cleanExpiredLocks();
+
+    // Check if lock exists
+    const existingLock = await kv.get(`lock:${resource}`);
+    
+    if (existingLock && existingLock.userId !== userId) {
+      // Another user has the lock
+      return c.json({ 
+        success: false, 
+        locked: true, 
+        lock: existingLock,
+        message: 'Resource is locked by another user'
+      }, 409);
+    }
+
+    // Create or update lock
+    const lock = {
+      resourceId: resource,
+      userId,
+      userName,
+      userEmail,
+      lockedAt: existingLock?.lockedAt || new Date().toISOString(),
+      lastHeartbeat: new Date().toISOString(),
+    };
+
+    await kv.set(`lock:${resource}`, lock);
+    console.log(`Lock acquired: ${resource} by ${userName}`);
+
+    return c.json({ success: true, locked: true, lock });
+  } catch (error) {
+    console.error('Error acquiring lock:', error);
+    return c.json({ error: 'Error acquiring lock' }, 500);
+  }
+});
+
+// Send heartbeat to keep lock alive (requires auth)
+app.post("/make-server-0ba58e95/locks/:resource/heartbeat", verifyAuth, async (c) => {
+  try {
+    const resource = c.req.param('resource');
+    const userId = c.get('userId');
+
+    const existingLock = await kv.get(`lock:${resource}`);
+    
+    if (!existingLock) {
+      return c.json({ error: 'Lock not found' }, 404);
+    }
+
+    if (existingLock.userId !== userId) {
+      return c.json({ error: 'Lock owned by another user' }, 403);
+    }
+
+    // Update heartbeat
+    existingLock.lastHeartbeat = new Date().toISOString();
+    await kv.set(`lock:${resource}`, existingLock);
+
+    return c.json({ success: true, lock: existingLock });
+  } catch (error) {
+    console.error('Error sending heartbeat:', error);
+    return c.json({ error: 'Error updating heartbeat' }, 500);
+  }
+});
+
+// Release lock (requires auth)
+app.delete("/make-server-0ba58e95/locks/:resource", verifyAuth, async (c) => {
+  try {
+    const resource = c.req.param('resource');
+    const userId = c.get('userId');
+
+    const existingLock = await kv.get(`lock:${resource}`);
+    
+    // Only the owner can release their own lock
+    if (existingLock && existingLock.userId !== userId) {
+      return c.json({ error: 'Cannot release lock owned by another user' }, 403);
+    }
+
+    await kv.del(`lock:${resource}`);
+    console.log(`Lock released: ${resource}`);
+
+    return c.json({ success: true, message: 'Lock released' });
+  } catch (error) {
+    console.error('Error releasing lock:', error);
+    return c.json({ error: 'Error releasing lock' }, 500);
+  }
+});
+
+// Takeover lock (force release by another user - requires auth)
+app.post("/make-server-0ba58e95/locks/:resource/takeover", verifyAuth, async (c) => {
+  try {
+    const resource = c.req.param('resource');
+    const userId = c.get('userId');
+    const userEmail = c.get('userEmail');
+    
+    // Get user name from metadata
+    const userMeta = await kv.get(`user:${userId}`);
+    const userName = userMeta?.name || userEmail?.split('@')[0] || 'Usuario';
+
+    const existingLock = await kv.get(`lock:${resource}`);
+    
+    if (existingLock) {
+      console.log(`Lock takeover: ${resource} - Previous owner: ${existingLock.userName}, New owner: ${userName}`);
+    }
+
+    // Force create new lock
+    const lock = {
+      resourceId: resource,
+      userId,
+      userName,
+      userEmail,
+      lockedAt: new Date().toISOString(),
+      lastHeartbeat: new Date().toISOString(),
+    };
+
+    await kv.set(`lock:${resource}`, lock);
+
+    return c.json({ success: true, locked: true, lock, takenOver: !!existingLock });
+  } catch (error) {
+    console.error('Error taking over lock:', error);
+    return c.json({ error: 'Error taking over lock' }, 500);
+  }
+});
+
 // ==================== PAGES ENDPOINTS ====================
 
 // Get all pages (public)

@@ -16,28 +16,25 @@ export function CourseCard({ title, subtitle, image, link = '#', index }: Course
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
+      className="group"
     >
-      <Link to={link} className="group block">
-        <div className="relative overflow-hidden rounded-lg bg-white shadow-md hover:shadow-xl transition-shadow duration-300">
-          {/* Image Container */}
-          <div className="relative h-64 overflow-hidden">
-            <motion.img
-              src={image}
-              alt={title}
-              className="w-full h-full object-cover"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.4 }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-            
-            {/* Title Overlay */}
-            <div className="absolute inset-0 flex items-center justify-center p-6">
-              <div className="bg-white/95 backdrop-blur-sm px-6 py-4 rounded-lg text-center shadow-lg transform group-hover:scale-105 transition-transform duration-300">
-                <h3 className="text-foreground mb-1">{title}</h3>
-                <p className="text-muted-foreground text-sm">{subtitle}</p>
-              </div>
-            </div>
-          </div>
+      <Link to={link} className="block">
+        {/* Image Container */}
+        <div className="relative h-64 overflow-hidden rounded-lg">
+          <motion.img
+            src={image}
+            alt={title}
+            className="w-full h-full object-cover"
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.4 }}
+          />
+        </div>
+        
+        {/* Text Content Below Image */}
+        <div className="mt-4 text-center">
+          <h3 className="mb-1">{title}</h3>
+          <p className="text-foreground/60 text-sm mb-2">{subtitle}</p>
+          <span className="text-sm text-primary group-hover:underline">Ver más</span>
         </div>
       </Link>
     </motion.div>

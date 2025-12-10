@@ -535,26 +535,21 @@ export function SectionEditor({
         {section.type === 'about' && (
           <>
             <div>
-              <label className="block text-sm mb-2">Título</label>
-              <input
-                type="text"
-                value={section.title || ''}
-                onChange={(e) => updateField('title', e.target.value)}
-                className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm mb-2">Contenido</label>
+              <label className="block text-sm mb-2">Contenido (usa \\n para separar párrafos)</label>
               <textarea
                 value={section.content || ''}
                 onChange={(e) => updateField('content', e.target.value)}
                 rows={6}
+                placeholder="Ya sea en clases mensuales o en talleres intensivos...\n\nTambién puedes crear un evento privado..."
                 className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
+              <p className="text-xs text-foreground/60 mt-2">
+                Usa \\n para separar párrafos
+              </p>
             </div>
 
             <div>
-              <label className="block text-sm mb-2">Imagen Principal (Página Home)</label>
+              <label className="block text-sm mb-2">Imagen Principal</label>
               <p className="text-xs text-foreground/60 mb-2">Esta imagen grande se mostrará en la sección About de la página de inicio</p>
               <ImageUploader
                 currentImage={section.mainImage || ''}
@@ -562,38 +557,6 @@ export function SectionEditor({
                 label="Imagen Principal"
                 aspectRatio="3:4"
               />
-            </div>
-
-            <div>
-              <label className="block text-sm mb-2">Imágenes</label>
-              {(section.images || []).map((image: string, index: number) => (
-                <div key={index} className="mb-2">
-                  <div className="flex gap-2 items-start">
-                    <div className="flex-1">
-                      <ImageUploader
-                        currentImage={image}
-                        onImageSelect={(url) => updateArrayItem('images', index, url)}
-                        label={`Imagen ${index + 1}`}
-                        compact={true}
-                        aspectRatio="1:1"
-                      />
-                    </div>
-                    <button
-                      onClick={() => removeArrayItem('images', index)}
-                      className="p-2 hover:bg-red-50 text-red-600 rounded mt-6"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-              <button
-                onClick={() => addArrayItem('images', '')}
-                className="text-sm text-primary hover:underline flex items-center gap-1 mt-2"
-              >
-                <Plus className="w-4 h-4" />
-                Agregar imagen
-              </button>
             </div>
           </>
         )}

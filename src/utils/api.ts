@@ -442,3 +442,40 @@ export const historyAPI = {
     });
   },
 };
+
+// ==================== LOCKS API ====================
+
+export const locksAPI = {
+  // Check lock status for a resource
+  async checkLock(resource: string) {
+    return apiCall(`/locks/${resource}`);
+  },
+
+  // Acquire lock for editing
+  async acquireLock(resource: string) {
+    return apiCall(`/locks/${resource}`, {
+      method: 'POST',
+    });
+  },
+
+  // Send heartbeat to keep lock alive
+  async sendHeartbeat(resource: string) {
+    return apiCall(`/locks/${resource}/heartbeat`, {
+      method: 'POST',
+    });
+  },
+
+  // Release lock
+  async releaseLock(resource: string) {
+    return apiCall(`/locks/${resource}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Takeover lock (force)
+  async takeoverLock(resource: string) {
+    return apiCall(`/locks/${resource}/takeover`, {
+      method: 'POST',
+    });
+  },
+};

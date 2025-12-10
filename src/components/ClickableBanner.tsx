@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import { ImageWithFallback } from './figma/ImageWithFallback';
 
 interface ClickableBannerProps {
   image?: string;
@@ -36,7 +37,7 @@ export function ClickableBanner({
         >
           {/* Image Section */}
           <div className="relative w-full h-64 md:h-auto">
-            <img
+            <ImageWithFallback
               src={image}
               alt={title}
               className="absolute inset-0 w-full h-full object-cover"

@@ -8,6 +8,8 @@ import { slugify } from '../../utils/slugify';
 import { PAGE_TEMPLATES, getTemplateById } from '../../utils/pageTemplates';
 import { SectionsContainer } from '../../components/admin/SectionsContainer';
 import { NavigationBlocker } from '../../components/NavigationBlocker';
+import { usePageLock } from '../../hooks/usePageLock';
+import { EditLockBanner } from '../../components/admin/EditLockBanner';
 
 export function CustomPagesManager() {
   const [pages, setPages] = useState<any[]>([]);
@@ -21,6 +23,18 @@ export function CustomPagesManager() {
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [pageType, setPageType] = useState<'simple' | 'sections'>('simple');
   const [viewMode, setViewMode] = useState<'active' | 'deleted'>('active');
+  const [isTakingControl, setIsTakingControl] = useState(false);
+
+  // Page lock management
+  const resourceId = editingPage?.slug ? `page:${editingPage.slug}` : '';
+  const pageLock = usePageLock(resourceId);
+
+  // Try to acquire lock when editing starts
+  useEffect(() => {
+    if (editingPage && editingPage.slug && !pageLock.hasLock && !pageLock.isLoading) {
+      pageLock.acquireLock();
+    }
+  }, [editingPage?.slug]);
 
   // Detectar cambios no guardados
   useEffect(() => {
@@ -181,6 +195,16 @@ export function CustomPagesManager() {
     }
   };
 
+  const handleTakeControl = async () => {
+    setIsTakingControl(true);
+    const success = await pageLock.takeoverLock();
+    setIsTakingControl(false);
+    
+    if (!success) {
+      alert('No se pudo tomar el control de la edición');
+    }
+  };
+
   const handleTemplateSelect = (templateId: string) => {
     const template = getTemplateById(templateId);
     if (template) {
@@ -307,6 +331,15 @@ export function CustomPagesManager() {
             </motion.button>
           </div>
 
+          {/* Lock Banner - mostrar si está bloqueada por otro usuario */}
+          {editingPage.slug && pageLock.isLocked && !pageLock.hasLock && pageLock.lockOwner && (
+            <EditLockBanner
+              lock={pageLock.lockOwner}
+              onTakeControl={handleTakeControl}
+              isTakingControl={isTakingControl}
+            />
+          )}
+
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="space-y-4">
               <div>
@@ -315,7 +348,8 @@ export function CustomPagesManager() {
                   type="text"
                   value={editingPage.title}
                   onChange={(e) => handleTitleChange(e.target.value)}
-                  className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  disabled={editingPage.slug && pageLock.isLocked && !pageLock.hasLock}
+                  className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-100 disabled:cursor-not-allowed"
                   required
                 />
               </div>
@@ -326,8 +360,9 @@ export function CustomPagesManager() {
                   type="text"
                   value={editingPage.slug || ''}
                   onChange={(e) => handleSlugChange(e.target.value)}
+                  disabled={editingPage.slug && pageLock.isLocked && !pageLock.hasLock}
                   placeholder="ej: sobre-nosotros"
-                  className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
                 <p className="text-xs text-foreground/60 mt-1">
                   Se usará en la URL: /{editingPage.slug || 'slug'}
@@ -339,6 +374,7 @@ export function CustomPagesManager() {
                   currentImage={editingPage.heroImage}
                   onImageSelect={(url) => setEditingPage({ ...editingPage, heroImage: url })}
                   label="Imagen de encabezado (opcional)"
+                  disabled={editingPage.slug && pageLock.isLocked && !pageLock.hasLock}
                 />
               </div>
 
@@ -347,6 +383,7 @@ export function CustomPagesManager() {
                 <RichTextEditor
                   value={editingPage.content}
                   onChange={(value) => setEditingPage({ ...editingPage, content: value })}
+                  disabled={editingPage.slug && pageLock.isLocked && !pageLock.hasLock}
                 />
               </div>
 
@@ -356,7 +393,8 @@ export function CustomPagesManager() {
                   id="visible"
                   checked={editingPage.visible}
                   onChange={(e) => setEditingPage({ ...editingPage, visible: e.target.checked })}
-                  className="w-4 h-4"
+                  disabled={editingPage.slug && pageLock.isLocked && !pageLock.hasLock}
+                  className="w-4 h-4 disabled:cursor-not-allowed"
                 />
                 <label htmlFor="visible" className="text-sm">
                   Visible en el sitio web
