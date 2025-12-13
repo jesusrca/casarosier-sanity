@@ -1,3 +1,6 @@
+// ESTE ARCHIVO ES UN EJEMPLO DE CÓMO PODRÍA SER UNA PÁGINA INDIVIDUAL DE CLASE
+// Ya no se usa en la app, pero se mantiene como referencia de diseño
+
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
 import { Hero } from '../components/Hero';
@@ -29,7 +32,7 @@ const schedules: DaySchedule[] = [
   },
 ];
 
-export function Clases() {
+export function ClaseExample() {
   const [images, setImages] = useState([
     "https://images.unsplash.com/photo-1753164726967-fa2c13494fc4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwb3R0ZXJ5JTIwY2xhc3MlMjBwZW9wbGV8ZW58MXx8fHwxNzY1MTUwMjg5fDA&ixlib=rb-4.1.0&q=80&w=1080",
     "https://images.unsplash.com/photo-1737564483280-15481c31608a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjZXJhbWljJTIwcG90dGVyeSUyMGhhbmRzJTIwd29ya3Nob3B8ZW58MXx8fHwxNzY1MTUwMjg4fDA&ixlib=rb-4.1.0&q=80&w=1080",

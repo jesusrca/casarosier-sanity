@@ -8,7 +8,7 @@ interface AccordionSectionProps {
   defaultOpen?: boolean;
 }
 
-export function AccordionSection({ title, children, defaultOpen = false }: AccordionSectionProps) {
+export function AccordionSection({ title, children, defaultOpen = true }: AccordionSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
@@ -26,10 +26,10 @@ export function AccordionSection({ title, children, defaultOpen = false }: Accor
           {isOpen ? <Minus size={20} /> : <Plus size={20} />}
         </motion.div>
       </button>
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {isOpen && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
+            initial={defaultOpen ? { height: 'auto', opacity: 1 } : { height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}

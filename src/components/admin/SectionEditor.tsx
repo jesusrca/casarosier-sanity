@@ -595,55 +595,10 @@ export function SectionEditor({
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm mb-2">Cursos / Servicios</label>
-              {(section.courses || []).map((course: any, index: number) => (
-                <div key={index} className="mb-4 p-4 border border-foreground/10 rounded-lg">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-sm font-medium">Curso {index + 1}</span>
-                    <button
-                      onClick={() => removeArrayItem('courses', index)}
-                      className="text-red-600 hover:bg-red-50 p-1 rounded"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    value={course.title || ''}
-                    onChange={(e) => updateArrayItem('courses', index, { ...course, title: e.target.value })}
-                    placeholder="Título del curso"
-                    className="w-full px-4 py-2 mb-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <input
-                    type="text"
-                    value={course.subtitle || ''}
-                    onChange={(e) => updateArrayItem('courses', index, { ...course, subtitle: e.target.value })}
-                    placeholder="Subtítulo"
-                    className="w-full px-4 py-2 mb-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <input
-                    type="text"
-                    value={course.link || ''}
-                    onChange={(e) => updateArrayItem('courses', index, { ...course, link: e.target.value })}
-                    placeholder="Enlace (ej: /clases)"
-                    className="w-full px-4 py-2 mb-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <ImageUploader
-                    currentImage={course.image || ''}
-                    onImageSelect={(url) => updateArrayItem('courses', index, { ...course, image: url })}
-                    label="Imagen del curso"
-                    aspectRatio="1:1"
-                  />
-                </div>
-              ))}
-              <button
-                onClick={() => addArrayItem('courses', { title: '', subtitle: '', link: '', image: '' })}
-                className="text-sm text-primary hover:underline flex items-center gap-1"
-              >
-                <Plus className="w-4 h-4" />
-                Agregar curso
-              </button>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                ℹ️ Los cursos se cargan automáticamente desde el gestor de Clases. Marca las clases/workshops con el checkbox "Mostrar en Home - Cursos" para que aparezcan aquí.
+              </p>
             </div>
           </>
         )}
@@ -682,55 +637,10 @@ export function SectionEditor({
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm mb-2">Cursos / Servicios</label>
-              {(section.courses || []).map((course: any, index: number) => (
-                <div key={index} className="mb-4 p-4 border border-foreground/10 rounded-lg">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-sm font-medium">Curso {index + 1}</span>
-                    <button
-                      onClick={() => removeArrayItem('courses', index)}
-                      className="text-red-600 hover:bg-red-50 p-1 rounded"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    value={course.title || ''}
-                    onChange={(e) => updateArrayItem('courses', index, { ...course, title: e.target.value })}
-                    placeholder="Título del curso"
-                    className="w-full px-4 py-2 mb-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <input
-                    type="text"
-                    value={course.subtitle || ''}
-                    onChange={(e) => updateArrayItem('courses', index, { ...course, subtitle: e.target.value })}
-                    placeholder="Subtítulo"
-                    className="w-full px-4 py-2 mb-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <input
-                    type="text"
-                    value={course.link || ''}
-                    onChange={(e) => updateArrayItem('courses', index, { ...course, link: e.target.value })}
-                    placeholder="Enlace (ej: /clases)"
-                    className="w-full px-4 py-2 mb-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <ImageUploader
-                    currentImage={course.image || ''}
-                    onImageSelect={(url) => updateArrayItem('courses', index, { ...course, image: url })}
-                    label="Imagen del curso"
-                    aspectRatio="1:1"
-                  />
-                </div>
-              ))}
-              <button
-                onClick={() => addArrayItem('courses', { title: '', subtitle: '', link: '', image: '' })}
-                className="text-sm text-primary hover:underline flex items-center gap-1"
-              >
-                <Plus className="w-4 h-4" />
-                Agregar curso
-              </button>
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <p className="text-sm text-purple-800">
+                ℹ️ Los workshops se cargan automáticamente desde el gestor de Clases. Marca las clases/workshops con el checkbox "Mostrar en Home - Workshops" para que aparezcan aquí.
+              </p>
             </div>
           </>
         )}

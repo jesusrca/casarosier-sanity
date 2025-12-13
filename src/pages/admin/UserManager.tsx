@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { userAPI } from '../../utils/api';
 import { Plus, Edit, Trash2, Eye, EyeOff, Shield, User } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface AdminUser {
   id: string;
@@ -20,6 +22,8 @@ const ROLES = [
 ];
 
 export function UserManager() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<Partial<AdminUser> | null>(null);
@@ -28,9 +32,18 @@ export function UserManager() {
   const [currentUserRole, setCurrentUserRole] = useState<string>('');
 
   useEffect(() => {
-    loadUsers();
     loadCurrentUser();
   }, []);
+
+  useEffect(() => {
+    // Solo cargar usuarios si el usuario actual es super admin
+    if (currentUserRole === 'super_admin') {
+      loadUsers();
+    } else if (currentUserRole && currentUserRole !== 'super_admin') {
+      // Si no es super admin, redirigir al dashboard
+      setLoading(false);
+    }
+  }, [currentUserRole]);
 
   const loadUsers = async () => {
     try {

@@ -369,24 +369,6 @@ export function CustomPagesManager() {
                 </p>
               </div>
 
-              <div>
-                <ImageUploader
-                  currentImage={editingPage.heroImage}
-                  onImageSelect={(url) => setEditingPage({ ...editingPage, heroImage: url })}
-                  label="Imagen de encabezado (opcional)"
-                  disabled={editingPage.slug && pageLock.isLocked && !pageLock.hasLock}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm mb-2">Contenido</label>
-                <RichTextEditor
-                  value={editingPage.content}
-                  onChange={(value) => setEditingPage({ ...editingPage, content: value })}
-                  disabled={editingPage.slug && pageLock.isLocked && !pageLock.hasLock}
-                />
-              </div>
-
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"

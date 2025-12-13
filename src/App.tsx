@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
+import { Toaster } from 'sonner@2.0.3';
 import { AuthProvider } from './contexts/AuthContext';
 import { ContentProvider } from './contexts/ContentContext';
 import { ScrollHeader } from './components/ScrollHeader';
@@ -7,7 +8,8 @@ import { Footer } from './components/Footer';
 import { ScrollToTop } from './components/ScrollToTop';
 import { AuthErrorHandler } from './components/AuthErrorHandler';
 import { Home } from './pages/Home';
-import { Clases } from './pages/Clases';
+import { ClasesListing } from './pages/ClasesListing';
+import { WorkshopsListing } from './pages/WorkshopsListing';
 import { Blog } from './pages/Blog';
 import { BlogPost } from './pages/BlogPost';
 import { ComingSoon } from './pages/ComingSoon';
@@ -32,7 +34,8 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           
           {/* Páginas de listado */}
-          <Route path="/clases" element={<Clases />} />
+          <Route path="/clases" element={<ClasesListing />} />
+          <Route path="/workshops" element={<WorkshopsListing />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           
@@ -66,6 +69,12 @@ function App() {
       <Router>
         <AuthProvider>
           <ContentProvider>
+            <Toaster 
+              position="top-right" 
+              expand={false}
+              richColors
+              closeButton
+            />
             <AppContent />
           </ContentProvider>
         </AuthProvider>

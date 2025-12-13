@@ -110,7 +110,7 @@ export function Hero({ backgroundImage, title, subtitle, showScrollIndicator = t
   const mobileSubmenuTextColor = isDarkBackground ? 'text-white/90 hover:text-white' : 'text-foreground/90 hover:text-foreground';
   const mobileBgColor = isDarkBackground ? 'bg-black/40' : 'bg-white/40';
   const mobileBorderColor = isDarkBackground ? 'border-white/10' : 'border-foreground/10';
-  const mobileSubmenuBg = isDarkBackground ? 'bg-white/10' : 'bg-foreground/10';
+  const mobileSubmenuBgColor = isDarkBackground ? 'bg-white/10' : 'bg-foreground/10';
   const scrollIndicatorColor = isDarkBackground ? 'border-white/70 text-white hover:bg-white/10' : 'border-foreground/70 text-foreground hover:bg-foreground/10';
   const headerGradient = isDarkBackground ? 'from-black/60' : 'from-white/60';
 
@@ -229,36 +229,42 @@ export function Hero({ backgroundImage, title, subtitle, showScrollIndicator = t
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: index * 0.05 }}
                   >
-                    {item.path ? (
-                      <Link
-                        to={item.path}
-                        onClick={() => setIsMenuOpen(false)}
-                        className={`block ${mobileTextColor} transition-colors duration-200 py-2.5 px-2`}
-                      >
-                        {item.name}
-                      </Link>
-                    ) : (
+                    {/* Si tiene submenú, mostrar botón expandible (independiente de si tiene path) */}
+                    {item.submenu ? (
                       <>
-                        <button
-                          onClick={() => toggleMobileSubmenu(item.name)}
-                          className={`w-full flex items-center justify-between ${mobileTextColor} transition-colors duration-200 py-2.5 px-2`}
-                        >
-                          <span>{item.name}</span>
-                          <motion.div
-                            animate={{ rotate: mobileOpenSubmenu === item.name ? 45 : 0 }}
-                            transition={{ duration: 0.2 }}
+                        <div className="flex items-center gap-2">
+                          {/* Si tiene path, mostrar también el link */}
+                          {item.path && (
+                            <Link
+                              to={item.path}
+                              onClick={() => setIsMenuOpen(false)}
+                              className={`flex-1 ${mobileTextColor} transition-colors duration-200 py-2.5 px-2`}
+                            >
+                              {item.name}
+                            </Link>
+                          )}
+                          {/* Botón para expandir submenú */}
+                          <button
+                            onClick={() => toggleMobileSubmenu(item.name)}
+                            className={`${item.path ? '' : 'flex-1 justify-between'} flex items-center ${mobileTextColor} transition-colors duration-200 py-2.5 px-2`}
                           >
-                            <Plus size={18} />
-                          </motion.div>
-                        </button>
+                            {!item.path && <span>{item.name}</span>}
+                            <motion.div
+                              animate={{ rotate: mobileOpenSubmenu === item.name ? 45 : 0 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <Plus size={18} />
+                            </motion.div>
+                          </button>
+                        </div>
                         <AnimatePresence>
-                          {mobileOpenSubmenu === item.name && item.submenu && (
+                          {mobileOpenSubmenu === item.name && (
                             <motion.div
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: 'auto', opacity: 1 }}
                               exit={{ height: 0, opacity: 0 }}
                               transition={{ duration: 0.2 }}
-                              className={`overflow-hidden ${mobileSubmenuBg} rounded-lg my-1`}
+                              className={`overflow-hidden ${mobileSubmenuBgColor} rounded-lg my-1`}
                             >
                               {item.submenu.map((subItem) => (
                                 <Link
@@ -268,7 +274,7 @@ export function Hero({ backgroundImage, title, subtitle, showScrollIndicator = t
                                     setIsMenuOpen(false);
                                     setMobileOpenSubmenu(null);
                                   }}
-                                  className={`block ${mobileSubmenuTextColor} transition-colors duration-200 py-2.5 px-4 text-sm`}
+                                  className={`block ${mobileTextColor} transition-colors duration-200 py-2.5 px-4 text-sm opacity-90 hover:opacity-100`}
                                 >
                                   {subItem.name}
                                 </Link>
@@ -277,6 +283,15 @@ export function Hero({ backgroundImage, title, subtitle, showScrollIndicator = t
                           )}
                         </AnimatePresence>
                       </>
+                    ) : (
+                      /* Si NO tiene submenú, solo mostrar link */
+                      <Link
+                        to={item.path || '/'}
+                        onClick={() => setIsMenuOpen(false)}
+                        className={`block ${mobileTextColor} transition-colors duration-200 py-2.5 px-2`}
+                      >
+                        {item.name}
+                      </Link>
                     )}
                   </motion.div>
                 ))}

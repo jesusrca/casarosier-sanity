@@ -7,14 +7,16 @@ import { ImageUploaderWithMeta, ImageMetadata } from '../../components/ImageUplo
 import { slugify } from '../../utils/slugify';
 import { VersionHistory } from '../../components/VersionHistory';
 import { NavigationBlocker } from '../../components/NavigationBlocker';
+import { RichTextEditor } from '../../components/RichTextEditor';
 
 interface ContentEditorProps {
   item: any;
   onSave: (item: any) => void;
   onCancel: () => void;
+  onDelete?: (id: string) => void;
 }
 
-export function ContentEditor({ item: initialItem, onSave, onCancel }: ContentEditorProps) {
+export function ContentEditor({ item: initialItem, onSave, onCancel, onDelete }: ContentEditorProps) {
   const [item, setItem] = useState(initialItem);
   const [initialItemSnapshot, setInitialItemSnapshot] = useState(JSON.stringify(initialItem));
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -162,6 +164,20 @@ export function ContentEditor({ item: initialItem, onSave, onCancel }: ContentEd
     window.open(previewUrl, '_blank');
   };
 
+  const handleDelete = () => {
+    if (!item.id) {
+      return;
+    }
+
+    if (confirm('¿Estás seguro de que quieres eliminar este elemento? Esta acción no se puede deshacer.')) {
+      if (onDelete) {
+        onDelete(item.id);
+        // Cerrar el editor después de eliminar
+        onCancel();
+      }
+    }
+  };
+
   const tabs = [
     { id: 'basic', label: 'Información Básica' },
     { id: 'schedule', label: 'Horario' },
@@ -293,15 +309,14 @@ export function ContentEditor({ item: initialItem, onSave, onCancel }: ContentEd
 
                     <div>
                       <label className="block text-sm mb-2">Descripción completa</label>
-                      <textarea
-                        value={item.description}
-                        onChange={(e) => updateField('description', e.target.value)}
-                        rows={8}
-                        placeholder="Descripción completa del curso. Usa saltos de línea para separar párrafos."
-                        className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      <RichTextEditor
+                        value={item.description || ''}
+                        onChange={(value) => updateField('description', value)}
+                        placeholder="Descripción completa del curso. Puedes usar formato, enlaces, imágenes, etc."
+                        height="300px"
                       />
                       <p className="text-xs text-foreground/60 mt-1">
-                        Cada salto de línea creará un nuevo párrafo
+                        Usa el editor para dar formato al texto, agregar enlaces e imágenes
                       </p>
                     </div>
 
@@ -310,8 +325,8 @@ export function ContentEditor({ item: initialItem, onSave, onCancel }: ContentEd
                         <label className="block text-sm mb-2">Precio (€)</label>
                         <input
                           type="number"
-                          value={item.price}
-                          onChange={(e) => updateField('price', parseFloat(e.target.value))}
+                          value={item.price || ''}
+                          onChange={(e) => updateField('price', e.target.value ? parseFloat(e.target.value) : 0)}
                           className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
@@ -347,56 +362,6 @@ export function ContentEditor({ item: initialItem, onSave, onCancel }: ContentEd
                   <h3 className="text-xl mb-4">Imágenes</h3>
 
                   <div className="space-y-6">
-                    {/* Hero Image - Special Section */}
-                    <div className="border-2 border-primary/20 rounded-lg p-4 bg-primary/5">
-                      <div className="flex items-center gap-2 mb-3">
-                        <h4 className="font-medium">Imagen del Hero (Banner Principal)</h4>
-                        <span className="text-xs bg-primary text-white px-2 py-1 rounded">Destacada</span>
-                      </div>
-                      <p className="text-sm text-foreground/60 mb-3">
-                        Esta imagen se mostrará en el banner principal de la página. Haz clic sobre la imagen para agregar información SEO.
-                      </p>
-                      <ImageUploader
-                        currentImage={typeof item.heroImage === 'string' ? item.heroImage : item.heroImage?.url || ''}
-                        onImageSelect={(data) => {
-                          if (typeof data === 'string') {
-                            updateField('heroImage', { url: data, alt: '', description: '' });
-                          } else {
-                            updateField('heroImage', data);
-                          }
-                        }}
-                        label=""
-                        withMetadata={true}
-                        initialAlt={typeof item.heroImage === 'object' ? item.heroImage?.alt || '' : ''}
-                        initialDescription={typeof item.heroImage === 'object' ? item.heroImage?.description || '' : ''}
-                      />
-                    </div>
-
-                    {/* Title Image */}
-                    <div className="border-2 border-primary/20 rounded-lg p-4 bg-primary/5">
-                      <div className="flex items-center gap-2 mb-3">
-                        <h4 className="font-medium">Imagen del Título</h4>
-                        <span className="text-xs bg-primary text-white px-2 py-1 rounded">Hero</span>
-                      </div>
-                      <p className="text-sm text-foreground/60 mb-3">
-                        Esta imagen se mostrará como título sobre la imagen del hero. Haz clic sobre la imagen para agregar información SEO.
-                      </p>
-                      <ImageUploader
-                        currentImage={typeof item.titleImage === 'string' ? item.titleImage : item.titleImage?.url || ''}
-                        onImageSelect={(data) => {
-                          if (typeof data === 'string') {
-                            updateField('titleImage', { url: data, alt: '', description: '' });
-                          } else {
-                            updateField('titleImage', data);
-                          }
-                        }}
-                        label=""
-                        withMetadata={true}
-                        initialAlt={typeof item.titleImage === 'object' ? item.titleImage?.alt || '' : ''}
-                        initialDescription={typeof item.titleImage === 'object' ? item.titleImage?.description || '' : ''}
-                      />
-                    </div>
-
                     {/* Gallery Images */}
                     <div>
                       <h4 className="font-medium mb-3">Galería de Imágenes</h4>
@@ -558,7 +523,7 @@ export function ContentEditor({ item: initialItem, onSave, onCancel }: ContentEd
                                   onChange={(e) => {
                                     const newSlots = [...(item.schedule?.slots || [])];
                                     const newTimes = [...(slot.times || [])];
-                                    newTimes[timeIndex] = { ...timeSlot, availablePlaces: parseInt(e.target.value) };
+                                    newTimes[timeIndex] = { ...timeSlot, availablePlaces: e.target.value ? parseInt(e.target.value) : 0 };
                                     newSlots[slotIndex] = { ...slot, times: newTimes };
                                     updateNestedField('schedule', 'slots', newSlots);
                                   }}
@@ -623,21 +588,21 @@ export function ContentEditor({ item: initialItem, onSave, onCancel }: ContentEd
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm mb-2">¿Qué aprenderás?</label>
-                      <textarea
+                      <RichTextEditor
                         value={item.content?.whatYouWillLearn || ''}
-                        onChange={(e) => updateNestedField('content', 'whatYouWillLearn', e.target.value)}
-                        rows={4}
-                        className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        onChange={(value) => updateNestedField('content', 'whatYouWillLearn', value)}
+                        placeholder="Describe qué aprenderán los estudiantes..."
+                        height="250px"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm mb-2">¿Quién puede participar?</label>
-                      <textarea
+                      <RichTextEditor
                         value={item.content?.whoCanParticipate || ''}
-                        onChange={(e) => updateNestedField('content', 'whoCanParticipate', e.target.value)}
-                        rows={3}
-                        className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        onChange={(value) => updateNestedField('content', 'whoCanParticipate', value)}
+                        placeholder="Describe quién puede participar en este curso..."
+                        height="200px"
                       />
                     </div>
 
@@ -710,6 +675,23 @@ export function ContentEditor({ item: initialItem, onSave, onCancel }: ContentEd
                   <h3 className="text-xl mb-4">Módulos del Curso</h3>
                   
                   <div className="space-y-4">
+                    {/* Título del acordeón principal */}
+                    <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                      <label className="block text-sm mb-2 font-medium">
+                        Título del acordeón principal
+                      </label>
+                      <input
+                        type="text"
+                        value={item.content?.modulesAccordionTitle || 'Ver programa completo'}
+                        onChange={(e) => updateNestedField('content', 'modulesAccordionTitle', e.target.value)}
+                        placeholder="Ver programa completo"
+                        className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                      <p className="text-xs text-foreground/60 mt-1">
+                        Este título aparece en el acordeón que agrupa todos los módulos
+                      </p>
+                    </div>
+
                     {(item.content?.modules || []).map((module: any, index: number) => (
                       <div key={index} className="border border-gray-200 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-3">
@@ -905,6 +887,115 @@ export function ContentEditor({ item: initialItem, onSave, onCancel }: ContentEd
               )}
             </div>
 
+            {/* Mostrar en Home */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-xl mb-2">Mostrar en Home</h3>
+              <p className="text-sm text-foreground/60 mb-4">
+                Selecciona en qué sección(es) del Home debe aparecer este contenido
+              </p>
+              
+              <div className="space-y-3">
+                <label className="flex items-center gap-3 cursor-pointer hover:bg-foreground/5 p-3 rounded-lg border border-foreground/10">
+                  <input
+                    type="checkbox"
+                    checked={item.showInHome || false}
+                    onChange={(e) => {
+                      console.log('🏠 ShowInHome changed:', e.target.checked);
+                      updateField('showInHome', e.target.checked);
+                    }}
+                    className="w-4 h-4"
+                  />
+                  <div>
+                    <span className="text-sm font-medium block">Sección de Cursos</span>
+                    <span className="text-xs text-foreground/60">Primera sección de cursos y talleres</span>
+                  </div>
+                </label>
+                
+                <label className="flex items-center gap-3 cursor-pointer hover:bg-foreground/5 p-3 rounded-lg border border-foreground/10">
+                  <input
+                    type="checkbox"
+                    checked={item.showInHomeWorkshops || false}
+                    onChange={(e) => {
+                      console.log('🎨 ShowInHomeWorkshops changed:', e.target.checked);
+                      updateField('showInHomeWorkshops', e.target.checked);
+                    }}
+                    className="w-4 h-4"
+                  />
+                  <div>
+                    <span className="text-sm font-medium block">Sección de Workshops</span>
+                    <span className="text-xs text-foreground/60">Segunda sección dedicada a workshops</span>
+                  </div>
+                </label>
+              </div>
+              
+              {(item.showInHome || item.showInHomeWorkshops) && (
+                <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <p className="text-xs text-green-700">
+                    ✓ Este contenido aparecerá en: 
+                    {item.showInHome && <span className="block ml-2">• Sección de Cursos</span>}
+                    {item.showInHomeWorkshops && <span className="block ml-2">• Sección de Workshops</span>}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Imágenes Destacadas */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-xl mb-4">Imágenes Destacadas</h3>
+
+              <div className="space-y-6">
+                {/* Hero Image */}
+                <div className="border-2 border-primary/20 rounded-lg p-4 bg-primary/5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <h4 className="text-sm font-medium">Imagen del Hero</h4>
+                    <span className="text-xs bg-primary text-white px-2 py-1 rounded">Banner</span>
+                  </div>
+                  <p className="text-xs text-foreground/60 mb-3">
+                    Banner principal de la página
+                  </p>
+                  <ImageUploader
+                    currentImage={typeof item.heroImage === 'string' ? item.heroImage : item.heroImage?.url || ''}
+                    onImageSelect={(data) => {
+                      if (typeof data === 'string') {
+                        updateField('heroImage', { url: data, alt: '', description: '' });
+                      } else {
+                        updateField('heroImage', data);
+                      }
+                    }}
+                    label=""
+                    withMetadata={true}
+                    initialAlt={typeof item.heroImage === 'object' ? item.heroImage?.alt || '' : ''}
+                    initialDescription={typeof item.heroImage === 'object' ? item.heroImage?.description || '' : ''}
+                  />
+                </div>
+
+                {/* Title Image */}
+                <div className="border-2 border-primary/20 rounded-lg p-4 bg-primary/5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <h4 className="text-sm font-medium">Imagen del Título</h4>
+                    <span className="text-xs bg-primary text-white px-2 py-1 rounded">Hero</span>
+                  </div>
+                  <p className="text-xs text-foreground/60 mb-3">
+                    Se mostrará sobre el banner
+                  </p>
+                  <ImageUploader
+                    currentImage={typeof item.titleImage === 'string' ? item.titleImage : item.titleImage?.url || ''}
+                    onImageSelect={(data) => {
+                      if (typeof data === 'string') {
+                        updateField('titleImage', { url: data, alt: '', description: '' });
+                      } else {
+                        updateField('titleImage', data);
+                      }
+                    }}
+                    label=""
+                    withMetadata={true}
+                    initialAlt={typeof item.titleImage === 'object' ? item.titleImage?.alt || '' : ''}
+                    initialDescription={typeof item.titleImage === 'object' ? item.titleImage?.description || '' : ''}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Action Buttons */}
             <div className="flex flex-col gap-3">
               <motion.button
@@ -932,6 +1023,23 @@ export function ContentEditor({ item: initialItem, onSave, onCancel }: ContentEd
               >
                 Cancelar
               </button>
+
+              {/* Botón Eliminar - Solo visible si el item ya existe */}
+              {item.id && onDelete && (
+                <>
+                  <div className="border-t border-foreground/10 my-2"></div>
+                  <motion.button
+                    type="button"
+                    onClick={handleDelete}
+                    className="w-full bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Trash2 className="w-5 h-5" />
+                    Eliminar
+                  </motion.button>
+                </>
+              )}
             </div>
           </div>
         </div>

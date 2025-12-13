@@ -43,6 +43,7 @@ interface ContentItem {
       title: string;
       description: string;
     }>;
+    modulesAccordionTitle?: string;
   };
   visible: boolean;
   seo?: {
@@ -169,8 +170,8 @@ export function DynamicContentPage() {
         titleImage={content.titleImage ? (typeof content.titleImage === 'string' ? content.titleImage : content.titleImage.url) : undefined}
       />
 
-      <section className="py-16 lg:py-24 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="pt-16 pb-8 lg:pt-24 lg:pb-12 bg-background">
+        <div className="max-w-7xl mx-auto px-8 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-12 lg:gap-16">
             {/* Image Gallery */}
             <div className="space-y-6 lg:sticky lg:top-8 lg:self-start">
@@ -237,63 +238,73 @@ export function DynamicContentPage() {
                 )}
               </div>
 
-              {/* Price and Includes */}
-              {(content.price || content.includes) && (
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                  {content.price && (
-                    <>
-                      <p className="text-xl text-primary mb-2">
-                        {content.duration}
-                      </p>
-                      <p className="text-2xl mb-6">
-                        {content.price}€
-                      </p>
-                    </>
-                  )}
+              {/* Two Column Layout: Price/Includes & Schedule */}
+              {(content.price || content.includes || content.schedule) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Left Column: Price and Includes */}
+                  {(content.price || content.includes) && (
+                    <div className="space-y-6">
+                      {content.price && (
+                        <>
+                          <p className="text-lg text-primary">
+                            {content.duration}
+                          </p>
+                          <p className="text-2xl">
+                            {content.price}€
+                          </p>
+                        </>
+                      )}
 
-                  {content.includes && content.includes.length > 0 && (
-                    <div className="space-y-3 mb-6">
-                      <h3 className="text-lg">Incluye</h3>
-                      <ul className="space-y-2 text-base text-foreground/80">
-                        {content.includes.map((item, index) => (
-                          <li key={index} className="flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      {content.includes && content.includes.length > 0 && (
+                        <div className="space-y-3">
+                          <h3 className="text-lg">Incluye</h3>
+                          <ul className="space-y-2 text-base text-foreground/80">
+                            {content.includes.map((item, index) => (
+                              <li key={index} className="flex items-start">
+                                <span className="mr-2">•</span>
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      <motion.button
+                        onClick={handleConsultar}
+                        className="border-2 border-primary text-primary px-6 py-2 rounded-lg text-sm overflow-hidden relative"
+                        initial={{ backgroundColor: 'transparent' }}
+                        whileHover={{ 
+                          backgroundColor: '#FF5100',
+                          color: '#FFFFFF',
+                          transition: { duration: 0.3 }
+                        }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        Consultar
+                      </motion.button>
                     </div>
                   )}
 
-                  <motion.button
-                    onClick={handleConsultar}
-                    className="w-full bg-primary text-white px-8 py-4 rounded-lg hover:bg-primary/90 transition-colors text-base"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    Consultar
-                  </motion.button>
-                </div>
-              )}
-
-              {/* Schedule */}
-              {content.schedule && content.schedule.slots && content.schedule.slots.length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="text-xl mb-3">Horarios</h3>
-                  <div className="space-y-2">
-                    {content.schedule.slots.map((slot, index) => (
-                      <div key={index} className="flex flex-col items-start space-y-2">
-                        <p className="text-base text-foreground/80 font-bold">{slot.day}</p>
-                        <div className="space-y-2 pl-4">
-                          {slot.times.map((time, timeIndex) => (
-                            <div key={timeIndex} className="text-base text-foreground/80">
-                              {time.time} ({time.availablePlaces} plazas)
+                  {/* Right Column: Schedule */}
+                  {content.schedule && content.schedule.slots && content.schedule.slots.length > 0 && (
+                    <div className="space-y-4">
+                      <h3 className="text-lg">Horarios</h3>
+                      <div className="space-y-3">
+                        {content.schedule.slots.map((slot, index) => (
+                          <div key={index} className="space-y-1.5">
+                            <p className="text-sm text-foreground/80 uppercase tracking-wide">{slot.day}</p>
+                            <div className="space-y-1">
+                              {slot.times.map((time, timeIndex) => (
+                                <div key={timeIndex} className="text-sm text-foreground/60">
+                                  Horario {time.time} ({time.availablePlaces} plazas)
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>
@@ -303,69 +314,12 @@ export function DynamicContentPage() {
 
       {/* Syllabus and Additional Info */}
       {(content.content || content.content?.additionalInfo) && (
-        <section className="py-16 lg:py-24 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+        <section className="pt-3 pb-8 lg:pt-5 lg:pb-12 bg-background">
+          <div className="max-w-7xl mx-auto px-8 sm:px-6 lg:px-8">
+            <div className="flex flex-col-reverse lg:grid lg:grid-cols-[2fr_3fr] gap-12 lg:gap-16">
+              {/* Left Column: Payment Methods and Additional Info */}
               <motion.div
                 initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="space-y-6"
-              >
-                {/* What You Will Learn */}
-                {content.content?.whatYouWillLearn && (
-                  <div className="space-y-4">
-                    <h3 className="text-xl mb-3">¿QUÉ APRENDERÁS?</h3>
-                    <div 
-                      className="text-base leading-relaxed text-foreground/80"
-                      dangerouslySetInnerHTML={{ __html: content.content.whatYouWillLearn.replace(/\\n/g, '<br/>') }}
-                    />
-                  </div>
-                )}
-
-                {/* Who Can Participate */}
-                {content.content?.whoCanParticipate && (
-                  <div className="space-y-4">
-                    <h3 className="text-xl mb-3">¿QUIÉN PUEDE PARTICIPAR?</h3>
-                    <div 
-                      className="text-base leading-relaxed text-foreground/80"
-                      dangerouslySetInnerHTML={{ __html: content.content.whoCanParticipate.replace(/\\n/g, '<br/>') }}
-                    />
-                  </div>
-                )}
-
-                {content.content && content.content.modules && content.content.modules.length > 0 && (
-                  <>
-                    <h3 className="text-xl mb-3">CONTENIDO DEL CURSO</h3>
-                    <AccordionSection title="Ver programa completo" defaultOpen={false}>
-                      <div className="space-y-4">
-                        {content.content.modules.map((item, index) => (
-                          <AccordionSection key={index} title={item.title} defaultOpen={index < 2}>
-                            <p className="text-base text-foreground/80">
-                              {item.description}
-                            </p>
-                          </AccordionSection>
-                        ))}
-                      </div>
-                    </AccordionSection>
-                  </>
-                )}
-
-                <div className="pt-6">
-                  <motion.button
-                    onClick={handleInscribirse}
-                    className="w-full bg-primary text-white px-8 py-4 rounded-lg hover:bg-primary/90 transition-colors text-base"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    Inscribirse
-                  </motion.button>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
@@ -436,7 +390,7 @@ export function DynamicContentPage() {
                 {(content.content?.contactPhone || content.content?.contactEmail || content.content?.additionalInfo) && (
                   <div className="space-y-4">
                     <h3 className="text-xl mb-3">INFORMACIÓN ADICIONAL</h3>
-                    <div className="bg-primary/5 border-l-4 border-primary rounded-lg p-6">
+                    <div className="bg-primary/3 rounded-lg p-6">
                       <p className="text-base leading-relaxed text-foreground/80 mb-4">
                         Cualquier consulta o información adicional que necesites me puedes escribir al WhatsApp{' '}
                         <a 
@@ -472,6 +426,69 @@ export function DynamicContentPage() {
                     className="w-full h-96 object-cover rounded-lg shadow-lg"
                   />
                 )}
+              </motion.div>
+
+              {/* Right Column: What You Will Learn, Who Can Participate, Modules */}
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="space-y-6"
+              >
+                {/* What You Will Learn */}
+                {content.content?.whatYouWillLearn && (
+                  <div className="space-y-4">
+                    <h3 className="text-xl mb-3">¿QUÉ APRENDERÁS?</h3>
+                    <div 
+                      className="text-base leading-relaxed text-foreground/80 prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: content.content.whatYouWillLearn }}
+                    />
+                  </div>
+                )}
+
+                {/* Who Can Participate */}
+                {content.content?.whoCanParticipate && (
+                  <div className="space-y-4">
+                    <h3 className="text-xl mb-3">¿QUIÉN PUEDE PARTICIPAR?</h3>
+                    <div 
+                      className="text-base leading-relaxed text-foreground/80 prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: content.content.whoCanParticipate }}
+                    />
+                  </div>
+                )}
+
+                {content.content && content.content.modules && content.content.modules.length > 0 && (
+                  <>
+                    <h3 className="text-xl mb-3">CONTENIDO DEL CURSO</h3>
+                    <AccordionSection title={content.content.modulesAccordionTitle || "Ver programa completo"} defaultOpen={true}>
+                      <div className="space-y-4">
+                        {content.content.modules.map((item, index) => (
+                          <AccordionSection key={index} title={item.title} defaultOpen={index === 0}>
+                            <p className="text-base text-foreground/80">
+                              {item.description}
+                            </p>
+                          </AccordionSection>
+                        ))}
+                      </div>
+                    </AccordionSection>
+                  </>
+                )}
+
+                <div className="pt-6">
+                  <motion.button
+                    onClick={handleInscribirse}
+                    className="w-full border-2 border-primary text-primary px-8 py-4 rounded-lg text-base transition-colors"
+                    whileHover={{ 
+                      backgroundColor: '#FF5100',
+                      color: '#FFFFFF',
+                      transition: { duration: 0.3 }
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Inscribirse
+                  </motion.button>
+                </div>
               </motion.div>
             </div>
           </div>

@@ -1,11 +1,10 @@
-import image_22346adf60f3b116e6667b47c39143747df28d93 from 'figma:asset/22346adf60f3b116e6667b47c39143747df28d93.png';
-import { Instagram, Facebook, Youtube } from 'lucide-react';
-import { motion } from 'motion/react';
-import { Link, useLocation } from 'react-router-dom';
-import logoImage from "figma:asset/28612bd890b3dcd85d8f93665d63bdc17b7bfea3.png";
 import { useState, useEffect } from 'react';
-import { messagesAPI, settingsAPI } from '../utils/api';
+import { Link, useLocation } from 'react-router-dom';
+import { motion } from 'motion/react';
+import { Instagram, Mail, Phone, Facebook, Youtube } from 'lucide-react';
+import { settingsAPI, messagesAPI } from '../utils/api';
 import { InstagramCarousel } from './InstagramCarousel';
+import image_22346adf60f3b116e6667b47c39143747df28d93 from "figma:asset/22346adf60f3b116e6667b47c39143747df28d93.png";
 
 export function Footer() {
   const location = useLocation();
@@ -25,7 +24,9 @@ export function Footer() {
       const response = await settingsAPI.getSettings();
       setSettings(response.settings);
     } catch (error) {
-      console.error('Error loading settings:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error loading settings:', error);
+      }
     }
   };
 
@@ -52,11 +53,10 @@ export function Footer() {
         message: formData.get('message') as string,
       };
 
-      const response = await messagesAPI.sendMessage(messageData);
-      console.log('Message sent successfully:', response);
+      await messagesAPI.sendMessage(messageData);
       
       setSuccess(true);
-      setError(''); // Asegurar que error esté limpio
+      setError('');
       e.currentTarget.reset();
       
       // Ocultar mensaje de éxito después de 5 segundos
@@ -66,8 +66,10 @@ export function Footer() {
       }, 5000);
       setSuccessTimeoutId(timeoutId);
     } catch (err) {
-      console.error('Error sending message:', err);
-      setSuccess(false); // Asegurar que success esté limpio
+      if (import.meta.env.DEV) {
+        console.error('Error sending message:', err);
+      }
+      setSuccess(false);
       setError('Error al enviar el mensaje. Por favor, inténtalo de nuevo.');
     } finally {
       setSending(false);

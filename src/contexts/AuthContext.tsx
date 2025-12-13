@@ -1,9 +1,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../utils/supabase/client';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
 
 interface User {
   id: string;
   email: string;
+  role?: string;
 }
 
 interface AuthContextType {
@@ -20,13 +22,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchUserRole = async (userId: string, accessToken: string) => {
+    try {
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-0ba58e95/users/${userId}/role`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        return data.role || 'editor';
+      } else {
+        console.error('Failed to fetch user role, status:', response.status);
+        const errorText = await response.text().catch(() => 'Unknown error');
+        console.error('Error response:', errorText);
+      }
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+      // Silently fail and default to 'editor' role - this allows the app to work
+      // even if the server is temporarily unavailable
+    }
+    return 'editor';
+  };
+
   const checkSession = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
+        const role = await fetchUserRole(session.user.id, session.access_token);
         setUser({
           id: session.user.id,
           email: session.user.email || '',
+          role,
         });
       } else {
         setUser(null);
@@ -44,11 +76,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkSession();
 
     // Escuchar cambios de autenticación
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
+        const role = await fetchUserRole(session.user.id, session.access_token);
         setUser({
           id: session.user.id,
           email: session.user.email || '',
+          role,
         });
       } else {
         setUser(null);
@@ -69,10 +103,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { user: null, error: error.message };
       }
 
-      if (data.user) {
+      if (data.user && data.session) {
+        const role = await fetchUserRole(data.user.id, data.session.access_token);
         const newUser = {
           id: data.user.id,
           email: data.user.email || '',
+          role,
         };
         setUser(newUser);
         return { user: newUser, error: null };

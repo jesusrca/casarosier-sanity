@@ -156,7 +156,8 @@ export function MenuManager() {
     const newItems = [...menuItems];
     if (!newItems[parentIndex].submenu) {
       newItems[parentIndex].submenu = [];
-      delete newItems[parentIndex].path;
+      // Ya no eliminamos el path automáticamente
+      // El usuario decide si quiere link o no
     }
     newItems[parentIndex].submenu!.push({
       name: 'Nuevo Subitem',
@@ -331,16 +332,15 @@ export function MenuManager() {
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     type="name"
                   />
-                  {!item.submenu && (
-                    <AutocompleteInput
-                      value={item.path || ''}
-                      onChange={(value) => updateMenuItem(index, 'path', value)}
-                      options={availablePages}
-                      placeholder="Ruta (ej: /clases)"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                      type="path"
-                    />
-                  )}
+                  {/* Mostrar campo de ruta siempre, incluso con submenú */}
+                  <AutocompleteInput
+                    value={item.path || ''}
+                    onChange={(value) => updateMenuItem(index, 'path', value)}
+                    options={availablePages}
+                    placeholder={item.submenu ? "Ruta (opcional)" : "Ruta (ej: /clases)"}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    type="path"
+                  />
                 </div>
 
                 <div className="flex gap-2">

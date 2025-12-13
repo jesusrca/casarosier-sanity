@@ -97,6 +97,13 @@ export function ImageUploader({ currentImage, onImageSelect, label = 'Imagen', c
       } else {
         onImageSelect(response.url);
       }
+      
+      // Cerrar el modal de galería y recargar imágenes si está abierto
+      if (showGallery) {
+        setShowGallery(false);
+        // Opcional: recargar galería en segundo plano para futuros usos
+        setTimeout(() => loadGallery(), 500);
+      }
     } catch (error) {
       console.error('Error uploading image:', error);
       alert('Error al subir la imagen. Por favor intenta de nuevo.');
@@ -192,32 +199,24 @@ export function ImageUploader({ currentImage, onImageSelect, label = 'Imagen', c
           </div>
           
           {/* Botones de acción */}
-          <div className={`flex gap-2 ${compact ? 'flex-row' : 'flex-col sm:flex-row'}`}>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading || compressing}
-              className={`flex items-center justify-center gap-2 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-xs ${compact ? '' : 'flex-1'}`}
-            >
-              <RefreshCw size={14} className={compressing ? 'animate-spin' : ''} />
-              {!compact && <span>{compressing ? 'Comprimiendo...' : uploading ? 'Subiendo...' : 'Cambiar'}</span>}
-            </button>
+          <div className="flex gap-2">
             <button
               type="button"
               onClick={handleShowGallery}
-              className={`flex items-center justify-center gap-2 px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-xs`}
+              disabled={uploading || compressing}
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm"
             >
-              <ImageIcon size={14} />
-              {!compact && <span>Galería</span>}
+              <RefreshCw size={14} />
+              <span>Cambiar</span>
             </button>
             <button
               type="button"
               onClick={handleRemoveImage}
-              className={`flex items-center justify-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs`}
+              className="flex items-center justify-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
               title="Eliminar imagen"
             >
               <Trash2 size={14} />
-              {!compact && <span>Eliminar</span>}
+              <span>Eliminar</span>
             </button>
           </div>
           
@@ -230,32 +229,19 @@ export function ImageUploader({ currentImage, onImageSelect, label = 'Imagen', c
           />
         </div>
       ) : (
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-          <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <p className="text-sm text-gray-600 mb-2">
-            Arrastra una imagen aquí o haz click para seleccionar
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+          <Upload className="mx-auto h-10 w-10 text-gray-400 mb-3" />
+          <p className="text-sm text-gray-600 mb-4">
+            {compressing ? 'Comprimiendo imagen...' : uploading ? 'Subiendo imagen...' : 'Selecciona una imagen desde la galería'}
           </p>
-          <p className="text-xs text-gray-500 mb-4">
-            Máximo 2MB · Se comprimirá automáticamente si es necesario
-          </p>
-          <div className="flex gap-2 justify-center">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading || compressing}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
-              {compressing ? 'Comprimiendo...' : uploading ? 'Subiendo...' : 'Seleccionar archivo'}
-            </button>
-            <button
-              type="button"
-              onClick={handleShowGallery}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-            >
-              <ImageIcon size={16} className="inline mr-2" />
-              Galería
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleShowGallery}
+            disabled={uploading || compressing}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm"
+          >
+            {compressing ? 'Comprimiendo...' : uploading ? 'Subiendo...' : 'Establecer imagen'}
+          </button>
           <input
             ref={fileInputRef}
             type="file"
@@ -291,6 +277,21 @@ export function ImageUploader({ currentImage, onImageSelect, label = 'Imagen', c
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <X size={20} />
+                </button>
+              </div>
+
+              {/* Botón de subir desde computadora */}
+              <div className="mb-6">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading || compressing}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  <Upload size={18} className={compressing ? 'animate-spin' : ''} />
+                  <span>
+                    {compressing ? 'Comprimiendo imagen...' : uploading ? 'Subiendo imagen...' : 'Subir desde computadora'}
+                  </span>
                 </button>
               </div>
 

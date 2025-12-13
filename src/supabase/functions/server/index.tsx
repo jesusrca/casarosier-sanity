@@ -268,6 +268,50 @@ app.get("/make-server-0ba58e95/users/me", verifyAuth, async (c) => {
   }
 });
 
+// Get user role by user ID (authenticated users can check their own role or any role)
+app.get("/make-server-0ba58e95/users/:id/role", verifyAuth, async (c) => {
+  try {
+    const userId = c.req.param('id');
+    
+    console.log(`Fetching role for user ${userId}...`);
+    
+    let userRole = await kv.get(`user:${userId}:role`);
+    
+    console.log(`Retrieved role from KV: ${userRole}`);
+    
+    // Migration: If user doesn't have role assigned, check if they're the first user
+    if (!userRole) {
+      console.log('No role found, checking if first user...');
+      const allUsers = await kv.getByPrefix('user:');
+      console.log(`Found ${allUsers.length} users in system`);
+      
+      const existingUsers = allUsers.filter((u: any) => u.email && u.id !== userId);
+      
+      // If this is the first/only user or no users have roles, make them super_admin
+      const usersWithRoles = allUsers.filter((u: any) => u.role);
+      if (existingUsers.length === 0 || usersWithRoles.length === 0) {
+        userRole = 'super_admin';
+      } else {
+        userRole = 'editor';
+      }
+      
+      // Store the role
+      await kv.set(`user:${userId}:role`, userRole);
+      
+      console.log(`Auto-assigned role ${userRole} to user ${userId}`);
+    }
+    
+    return c.json({ role: userRole });
+  } catch (error) {
+    console.error('Error fetching user role:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    return c.json({ 
+      error: `Error fetching user role: ${error instanceof Error ? error.message : String(error)}`,
+      details: error instanceof Error ? error.stack : undefined
+    }, 500);
+  }
+});
+
 // Create user (requires super_admin)
 app.post("/make-server-0ba58e95/users", verifyAuth, verifySuperAdmin, async (c) => {
   try {
@@ -1316,29 +1360,44 @@ app.post("/make-server-0ba58e95/locks/:resource", verifyAuth, async (c) => {
     const userMeta = await kv.get(`user:${userId}`);
     const userName = userMeta?.name || userEmail?.split('@')[0] || 'Usuario';
 
-    // Clean expired locks first
-    await cleanExpiredLocks();
-
     // Check if lock exists
     const existingLock = await kv.get(`lock:${resource}`);
     
-    if (existingLock && existingLock.userId !== userId) {
-      // Another user has the lock
-      return c.json({ 
-        success: false, 
-        locked: true, 
-        lock: existingLock,
-        message: 'Resource is locked by another user'
-      }, 409);
+    // Check if lock is expired
+    if (existingLock) {
+      const lastHeartbeat = new Date(existingLock.lastHeartbeat).getTime();
+      const now = Date.now();
+      const LOCK_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+
+      if (now - lastHeartbeat > LOCK_TIMEOUT) {
+        // Lock expired, remove it
+        console.log(`Lock expired for ${resource}, cleaning up...`);
+        await kv.del(`lock:${resource}`);
+      } else if (existingLock.userId !== userId) {
+        // Another user has an active lock
+        console.log(`Lock denied: ${resource} is locked by ${existingLock.userName}`);
+        return c.json({ 
+          success: false, 
+          locked: true, 
+          lock: existingLock,
+          message: 'Resource is locked by another user'
+        }, 409);
+      } else {
+        // Same user already has the lock, just update heartbeat
+        console.log(`Lock refreshed: ${resource} by ${userName}`);
+        existingLock.lastHeartbeat = new Date().toISOString();
+        await kv.set(`lock:${resource}`, existingLock);
+        return c.json({ success: true, locked: true, lock: existingLock });
+      }
     }
 
-    // Create or update lock
+    // Create new lock
     const lock = {
       resourceId: resource,
       userId,
       userName,
       userEmail,
-      lockedAt: existingLock?.lockedAt || new Date().toISOString(),
+      lockedAt: new Date().toISOString(),
       lastHeartbeat: new Date().toISOString(),
     };
 
@@ -1348,7 +1407,7 @@ app.post("/make-server-0ba58e95/locks/:resource", verifyAuth, async (c) => {
     return c.json({ success: true, locked: true, lock });
   } catch (error) {
     console.error('Error acquiring lock:', error);
-    return c.json({ error: 'Error acquiring lock' }, 500);
+    return c.json({ error: `Error acquiring lock: ${error.message || error}` }, 500);
   }
 });
 

@@ -85,7 +85,7 @@ export function InstagramCarousel({
 
   return (
     <section className="py-16 lg:py-20 bg-background">
-      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-1 sm:px-6 lg:px-8">
         {/* Title */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -121,7 +121,7 @@ export function InstagramCarousel({
         >
           <Slider {...settings}>
             {normalizedImages.map((image, index) => (
-              <div key={index} className="px-2">
+              <div key={index} className="px-0.5 sm:px-2">
                 <motion.button
                   onClick={() => handleImageClick(index)}
                   className="block w-full aspect-square overflow-hidden rounded-lg shadow-md cursor-pointer"

@@ -25,6 +25,7 @@ import { CustomPagesManager } from './CustomPagesManager';
 import { UserManager } from './UserManager';
 import { MessagesManager } from './MessagesManager';
 import { ImageLibrary } from './ImageLibrary';
+import { Dashboard } from './Dashboard';
 
 export function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -74,16 +75,21 @@ export function AdminDashboard() {
   };
 
   const menuItems = [
-    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/admin/dashboard/pages', icon: FileImage, label: 'Páginas' },
-    { path: '/admin/dashboard/content', icon: FileText, label: 'Clases' },
-    { path: '/admin/dashboard/blog', icon: BookOpen, label: 'Blog' },
-    { path: '/admin/dashboard/menu', icon: List, label: 'Menú' },
-    { path: '/admin/dashboard/messages', icon: Mail, label: 'Mensajes' },
-    { path: '/admin/dashboard/users', icon: Users, label: 'Usuarios' },
-    { path: '/admin/dashboard/settings', icon: Settings, label: 'Ajustes' },
-    { path: '/admin/dashboard/images', icon: Image, label: 'Imágenes' },
+    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['super_admin', 'editor'] },
+    { path: '/admin/dashboard/pages', icon: FileImage, label: 'Páginas', roles: ['super_admin'] },
+    { path: '/admin/dashboard/content', icon: FileText, label: 'Clases', roles: ['super_admin', 'editor'] },
+    { path: '/admin/dashboard/blog', icon: BookOpen, label: 'Blog', roles: ['super_admin', 'editor'] },
+    { path: '/admin/dashboard/menu', icon: List, label: 'Menú', roles: ['super_admin'] },
+    { path: '/admin/dashboard/messages', icon: Mail, label: 'Mensajes', roles: ['super_admin', 'editor'] },
+    { path: '/admin/dashboard/users', icon: Users, label: 'Usuarios', roles: ['super_admin'] },
+    { path: '/admin/dashboard/settings', icon: Settings, label: 'Ajustes', roles: ['super_admin'] },
+    { path: '/admin/dashboard/images', icon: Image, label: 'Imágenes', roles: ['super_admin'] },
   ];
+
+  // Filtrar items del menú según el rol del usuario
+  const filteredMenuItems = menuItems.filter(item => 
+    item.roles.includes(user?.role || 'editor')
+  );
 
   // Si no hay usuario y terminó de cargar, ya se redirigió
   // No mostrar nada mientras se redirige
@@ -117,7 +123,7 @@ export function AdminDashboard() {
         
         <nav className="flex-1 p-4">
           <ul className="space-y-1">
-            {menuItems.map((item) => {
+            {filteredMenuItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
               
@@ -196,7 +202,7 @@ export function AdminDashboard() {
         {/* Content Area */}
         <main className="flex-1 overflow-auto p-6">
           <Routes>
-            <Route path="/" element={<DashboardHome />} />
+            <Route path="/" element={<Dashboard />} />
             <Route path="/content" element={<ContentManager />} />
             <Route path="/blog" element={<BlogManager />} />
             <Route path="/settings" element={<SettingsManager />} />

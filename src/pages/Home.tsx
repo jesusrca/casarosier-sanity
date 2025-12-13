@@ -4,15 +4,19 @@ import { useState, useEffect } from 'react';
 import { HeroHome } from '../components/HeroHome';
 import { CourseCard } from '../components/CourseCard';
 import { ClickableBanner } from '../components/ClickableBanner';
-import { pagesAPI } from '../utils/api';
+import { pagesAPI, contentAPI } from '../utils/api';
 import logoImage from "figma:asset/28612bd890b3dcd85d8f93665d63bdc17b7bfea3.png";
 
 export function Home() {
   const [pageData, setPageData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [featuredCourses, setFeaturedCourses] = useState<any[]>([]);
+  const [featuredWorkshops, setFeaturedWorkshops] = useState<any[]>([]);
 
   useEffect(() => {
     loadPageData();
+    loadFeaturedCourses();
+    loadFeaturedWorkshops();
   }, []);
 
   const loadPageData = async () => {
@@ -26,6 +30,82 @@ export function Home() {
       console.log('Using default home content');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadFeaturedCourses = async () => {
+    try {
+      // Cargar todas las clases y workshops
+      const response = await contentAPI.getItems();
+      const allItems = response.items || [];
+      
+      // Filtrar solo los que tienen showInHome: true y están visibles
+      const featured = allItems.filter((item: any) => item.showInHome === true && item.visible === true);
+      
+      // Convertir a formato de CourseCard
+      const formattedCourses = featured.map((item: any) => {
+        // Determinar el link según el tipo
+        const linkPrefix = item.type === 'class' ? '/clases/' : 
+                          item.type === 'workshop' ? '/workshops/' : 
+                          '/privada/';
+        
+        // Obtener la primera imagen (puede ser string u objeto)
+        let imageUrl = '';
+        if (item.images && item.images.length > 0) {
+          const firstImage = item.images[0];
+          imageUrl = typeof firstImage === 'string' ? firstImage : firstImage.url || '';
+        }
+        
+        return {
+          title: item.title || '',
+          subtitle: item.subtitle || item.shortDescription || '',
+          image: imageUrl,
+          link: linkPrefix + item.slug
+        };
+      });
+      
+      console.log('🏠 Featured courses loaded:', formattedCourses);
+      setFeaturedCourses(formattedCourses);
+    } catch (error) {
+      console.error('Error loading featured courses:', error);
+    }
+  };
+
+  const loadFeaturedWorkshops = async () => {
+    try {
+      // Cargar todas las clases y workshops
+      const response = await contentAPI.getItems();
+      const allItems = response.items || [];
+      
+      // Filtrar solo los que tienen showInHomeWorkshops: true y están visibles
+      const featured = allItems.filter((item: any) => item.showInHomeWorkshops === true && item.visible === true);
+      
+      // Convertir a formato de CourseCard
+      const formattedWorkshops = featured.map((item: any) => {
+        // Determinar el link según el tipo
+        const linkPrefix = item.type === 'class' ? '/clases/' : 
+                          item.type === 'workshop' ? '/workshops/' : 
+                          '/privada/';
+        
+        // Obtener la primera imagen (puede ser string u objeto)
+        let imageUrl = '';
+        if (item.images && item.images.length > 0) {
+          const firstImage = item.images[0];
+          imageUrl = typeof firstImage === 'string' ? firstImage : firstImage.url || '';
+        }
+        
+        return {
+          title: item.title || '',
+          subtitle: item.subtitle || item.shortDescription || '',
+          image: imageUrl,
+          link: linkPrefix + item.slug
+        };
+      });
+      
+      console.log('🎨 Featured workshops loaded:', formattedWorkshops);
+      setFeaturedWorkshops(formattedWorkshops);
+    } catch (error) {
+      console.error('Error loading featured workshops:', error);
     }
   };
 
@@ -142,38 +222,40 @@ export function Home() {
       </section>
 
       {/* Courses Section - Cursos y workshops */}
-      <section className="py-16 lg:py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <div className="flex flex-col items-center gap-2">
-              <h2>
-                {coursesTitleLine1}
-              </h2>
-              <div className="flex items-center gap-3">
-                <div className="w-8 lg:w-12 h-[1px] bg-[#7B7269]/40"></div>
+      {featuredCourses.length > 0 && (
+        <section className="py-16 lg:py-24 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-center mb-12"
+            >
+              <div className="flex flex-col items-center gap-2">
                 <h2>
-                  {coursesTitleLine2}
+                  {coursesTitleLine1}
                 </h2>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 lg:w-12 h-[1px] bg-[#7B7269]/40"></div>
+                  <h2>
+                    {coursesTitleLine2}
+                  </h2>
+                </div>
               </div>
+            </motion.div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+              {featuredCourses.map((course: any, index: number) => (
+                <CourseCard key={index} {...course} index={index} />
+              ))}
             </div>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-            {courses.map((course: any, index: number) => (
-              <CourseCard key={index} {...course} index={index} />
-            ))}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* Courses Section 2 - Más opciones */}
-      {courses2 && courses2.length > 0 && (
+      {/* Courses Section 2 - Workshops */}
+      {featuredWorkshops.length > 0 && (
         <section className="py-16 lg:py-24 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
@@ -197,7 +279,7 @@ export function Home() {
             </motion.div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-              {courses2.map((course: any, index: number) => (
+              {featuredWorkshops.map((course: any, index: number) => (
                 <CourseCard key={index} {...course} index={index} />
               ))}
             </div>
