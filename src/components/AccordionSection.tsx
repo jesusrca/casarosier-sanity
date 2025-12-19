@@ -8,6 +8,48 @@ interface AccordionSectionProps {
   defaultOpen?: boolean;
 }
 
+// Helper function to process text content
+function processContent(content: React.ReactNode): React.ReactNode {
+  if (typeof content !== 'string') {
+    return content;
+  }
+
+  // Split by lines
+  const lines = content.split('\n').filter(line => line.trim());
+  
+  // Check if any line starts with bullet markers
+  const hasBullets = lines.some(line => 
+    /^[\s]*[•\-*]\s/.test(line)
+  );
+
+  if (hasBullets) {
+    // Process as bullet list
+    const items = lines.map(line => {
+      // Remove bullet markers
+      return line.replace(/^[\s]*[•\-*]\s/, '').trim();
+    }).filter(item => item);
+
+    return (
+      <ul className="space-y-2 text-base text-foreground/80">
+        {items.map((item, index) => (
+          <li key={index} className="flex items-start">
+            <span className="mr-2">•</span>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  // Process as regular text with line breaks
+  return (
+    <div 
+      className="text-base text-foreground/80 whitespace-pre-line"
+      dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br/>') }}
+    />
+  );
+}
+
 export function AccordionSection({ title, children, defaultOpen = true }: AccordionSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
@@ -36,7 +78,7 @@ export function AccordionSection({ title, children, defaultOpen = true }: Accord
             className="overflow-hidden"
           >
             <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-border">
-              {children}
+              {processContent(children)}
             </div>
           </motion.div>
         )}

@@ -358,6 +358,25 @@ export function SettingsManager() {
               initialAlt={typeof settings.blogHeroImage === 'object' ? settings.blogHeroImage?.alt || '' : ''}
               initialDescription={typeof settings.blogHeroImage === 'object' ? settings.blogHeroImage?.description || '' : ''}
             />
+            
+            <ImageUploader
+              currentImage={typeof settings.blogTitleImage === 'string' ? settings.blogTitleImage : settings.blogTitleImage?.url || ''}
+              onImageSelect={(data) => {
+                if (typeof data === 'string') {
+                  updateField('blogTitleImage', { url: data, alt: '', description: '' });
+                } else {
+                  updateField('blogTitleImage', data);
+                }
+              }}
+              label="Imagen de Título del Blog (opcional - PNG transparente que reemplaza el texto)"
+              withMetadata={true}
+              initialAlt={typeof settings.blogTitleImage === 'object' ? settings.blogTitleImage?.alt || '' : ''}
+              initialDescription={typeof settings.blogTitleImage === 'object' ? settings.blogTitleImage?.description || '' : ''}
+            />
+            
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+              <strong>💡 Imagen de Título:</strong> Si subes una imagen de título (PNG transparente recomendado), esta reemplazará el texto "Blog" en el hero. Si no se sube, se mostrará el texto normal.
+            </div>
           </div>
         </div>
 
@@ -419,12 +438,12 @@ export function SettingsManager() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm mb-2">Título del Carrusel</label>
-              <input
-                type="text"
+              <textarea
                 value={settings.instagramTitle || ''}
                 onChange={(e) => updateField('instagramTitle', e.target.value)}
                 placeholder="Y TÚ, ¿CUÁNDO TUVISTE TU ÚLTIMA IDEA?"
-                className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                rows={3}
+                className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-y"
               />
             </div>
 

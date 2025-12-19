@@ -7,6 +7,7 @@ import { ScrollHeader } from './components/ScrollHeader';
 import { Footer } from './components/Footer';
 import { ScrollToTop } from './components/ScrollToTop';
 import { AuthErrorHandler } from './components/AuthErrorHandler';
+import { WhatsAppButton } from './components/WhatsAppButton';
 import { Home } from './pages/Home';
 import { ClasesListing } from './pages/ClasesListing';
 import { WorkshopsListing } from './pages/WorkshopsListing';
@@ -29,6 +30,7 @@ function AppContent() {
       <AuthErrorHandler />
       <ScrollToTop />
       {!isAdminRoute && <ScrollHeader />}
+      {!isAdminRoute && <WhatsAppButton />}
       <main className="flex-1">
         <Routes location={location}>
           <Route path="/" element={<Home />} />

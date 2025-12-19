@@ -45,7 +45,7 @@ function ClassLayoutSection({ section }: { section: any }) {
 
             {/* Subtítulo */}
             {section.subtitle && (
-              <p className="text-lg text-foreground/70">{section.subtitle}</p>
+              <p className="text-lg leading-relaxed mb-4 text-[#7B7269] text-center uppercase tracking-[0.1em] font-light">{section.subtitle}</p>
             )}
 
             {/* Descripción */}
@@ -362,7 +362,13 @@ export function PageSection({ section, siteSettings }: PageSectionProps) {
             {section.title && (
               <h2 className="mb-8 text-center">{section.title}</h2>
             )}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            
+            {/* Subtítulo */}
+            {section.subtitle && (
+              <p className="text-lg text-foreground/70 text-center mb-8">{section.subtitle}</p>
+            )}
+            
+            <div className="flex flex-wrap gap-6 justify-center">
               {section.giftCards && section.giftCards.map((card: any, index: number) => (
                 <motion.div
                   key={index}
@@ -370,11 +376,11 @@ export function PageSection({ section, siteSettings }: PageSectionProps) {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
+                  className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 w-full max-w-sm md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]"
                 >
                   {/* Imagen */}
                   {card.image && (
-                    <div className="w-full h-48 overflow-hidden">
+                    <div className="w-full h-64 overflow-hidden">
                       <img 
                         src={card.image} 
                         alt={card.title || 'Tarjeta de regalo'} 

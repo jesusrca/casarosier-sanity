@@ -156,7 +156,7 @@ export function Home() {
       {/* About Section */}
       <section id="about-section" className="py-16 lg:py-24 bg-background">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-4 items-center">
             {/* Single Large Image */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
@@ -167,7 +167,7 @@ export function Home() {
               <img
                 src={aboutMainImage}
                 alt="Casa Rosier Cerámica"
-                className="w-full h-[500px] lg:h-[600px] object-cover"
+                className="w-full h-[298px] lg:h-[357px] object-cover lg:object-contain lg:object-right"
               />
             </motion.div>
 
@@ -177,17 +177,14 @@ export function Home() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="space-y-6"
+              className="space-y-6 max-w-2xl"
             >
-              <div className="space-y-4">
+              <div className="space-y-4 text-left">
                 {contentParagraphs.map((paragraph: string, index: number) => (
-                  <p key={index} className="text-lg leading-relaxed text-[#6B6B6B] text-left font-serif font-light">
+                  <p key={index} className="text-lg lg:text-xl leading-relaxed text-[#7b7269] text-left font-serif font-light max-w-sm">
                     {paragraph}
                   </p>
                 ))}
-              </div>
-              <div className="flex justify-center pt-4">
-                <img src={image_22346adf60f3b116e6667b47c39143747df28d93} alt="Casa Rosier" className="h-16 w-auto opacity-80" />
               </div>
             </motion.div>
           </div>

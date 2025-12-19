@@ -14,6 +14,7 @@ interface HeroProps {
   useTextTitle?: boolean; // Nuevo prop para decidir si usar texto o imagen
   showWhiteGradient?: boolean; // Nuevo prop para mostrar degradado blanco al final (para Home)
   titleImage?: string; // Imagen del título editable desde el administrador
+  reducedHeight?: boolean; // Nuevo prop para reducir altura (solo para blog)
 }
 
 interface SubMenuItem {
@@ -29,7 +30,7 @@ interface MenuItem {
   order?: number;
 }
 
-export function Hero({ backgroundImage, title, subtitle, showScrollIndicator = true, useTextTitle = false, showWhiteGradient = false, titleImage }: HeroProps) {
+export function Hero({ backgroundImage, title, subtitle, showScrollIndicator = true, useTextTitle = false, showWhiteGradient = false, titleImage, reducedHeight = false }: HeroProps) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [mobileOpenSubmenu, setMobileOpenSubmenu] = useState<string | null>(null);
@@ -115,7 +116,7 @@ export function Hero({ backgroundImage, title, subtitle, showScrollIndicator = t
   const headerGradient = isDarkBackground ? 'from-black/60' : 'from-white/60';
 
   return (
-    <div className="relative h-[65vh] min-h-[500px] flex flex-col overflow-hidden">
+    <div className={`relative ${reducedHeight ? 'h-[50vh] min-h-[400px]' : 'h-[65vh] min-h-[500px]'} flex flex-col overflow-hidden`}>
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
@@ -123,12 +124,12 @@ export function Hero({ backgroundImage, title, subtitle, showScrollIndicator = t
           alt=""
           className="w-full h-full object-cover"
         />
-        {/* Degradado beige muy sutil y difuminado */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#F3F2EF]/10 via-transparent to-[#E8E7E3]/15" />
+        {/* Degradado beige muy sutil y difuminado - Solo en desktop */}
+        <div className="hidden md:block absolute inset-0 bg-gradient-to-b from-[#F3F2EF]/10 via-transparent to-[#E8E7E3]/15" />
       </div>
 
       {/* Header with Logo and Menu - Con fondo sólido para ser visible antes que la imagen */}
-      <div className="relative z-20 pt-4 sm:pt-6 pb-3">
+      <div className="absolute top-0 left-0 right-0 z-20 pt-4 sm:pt-6 pb-3">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Logo y Menú en una sola línea */}
           <div className="flex justify-between items-center">
@@ -328,7 +329,7 @@ export function Hero({ backgroundImage, title, subtitle, showScrollIndicator = t
                   src={titleImage || heroTextImage} 
                   alt={`${title} ${subtitle || ''}`}
                   loading="lazy"
-                  className="w-[70%] md:w-[50%] lg:w-[40%] h-auto"
+                  className="w-[70%] md:w-[50%] lg:w-[40%] h-auto mx-auto"
                 />
               </div>
             )}

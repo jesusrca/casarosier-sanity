@@ -36,7 +36,7 @@ export function ClickableBanner({
           className={`overflow-hidden grid grid-cols-1 md:grid-cols-[300px_1fr] lg:grid-cols-[400px_1fr] gap-0 ${link ? 'cursor-pointer' : ''}`}
         >
           {/* Image Section */}
-          <div className="relative w-full h-64 md:h-auto">
+          <div className="relative w-full aspect-square">
             <img
               src={image}
               alt={title}

@@ -24,6 +24,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserRole = async (userId: string, accessToken: string) => {
     try {
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-0ba58e95/users/${userId}/role`,
         {
@@ -31,22 +35,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
           },
+          signal: controller.signal,
         }
       );
+      
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         const data = await response.json();
         return data.role || 'editor';
-      } else {
-        console.error('Failed to fetch user role, status:', response.status);
-        const errorText = await response.text().catch(() => 'Unknown error');
-        console.error('Error response:', errorText);
       }
     } catch (error) {
-      console.error('Error fetching user role:', error);
-      // Silently fail and default to 'editor' role - this allows the app to work
-      // even if the server is temporarily unavailable
+      // Silently fail - this is expected when server is unavailable
+      // or during development/testing
     }
+    // Default to editor role without logging
     return 'editor';
   };
 

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bold, Italic, Underline, List, ListOrdered, Link2, Image as ImageIcon, AlignLeft, AlignCenter, AlignRight, Eraser, Code, Type, Heading1, Heading2, Heading3 } from 'lucide-react';
+import { Bold, Italic, List, ListOrdered, Link2, Image as ImageIcon, Eraser, Code, Heading2, Heading3 } from 'lucide-react';
 import { uploadAPI } from '../utils/api';
 
 interface RichTextEditorProps {
@@ -15,30 +15,89 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escribe aquí..
   const [showHtml, setShowHtml] = useState(false);
   const [htmlCode, setHtmlCode] = useState('');
 
+  // Sincronizar valor inicial
   useEffect(() => {
-    if (editorRef.current && !isFocused && value !== editorRef.current.innerHTML) {
-      editorRef.current.innerHTML = value || '';
+    if (editorRef.current && !isFocused) {
+      const normalizedValue = normalizeHTML(value || '');
+      if (editorRef.current.innerHTML !== normalizedValue) {
+        editorRef.current.innerHTML = normalizedValue;
+      }
     }
   }, [value, isFocused]);
 
-  useEffect(() => {
-    // Cuando se vuelve del modo HTML al modo visual, actualizar inmediatamente
-    if (!showHtml && editorRef.current && htmlCode) {
-      editorRef.current.innerHTML = htmlCode;
-    }
-  }, [showHtml]);
+  // Normalizar HTML para evitar inconsistencias
+  const normalizeHTML = (html: string): string => {
+    if (!html) return '';
+    
+    // Crear un elemento temporal para limpiar el HTML
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    
+    // Remover elementos vacíos innecesarios
+    const removeEmptyElements = (element: HTMLElement) => {
+      const children = Array.from(element.children);
+      children.forEach((child) => {
+        if (child instanceof HTMLElement) {
+          // Remover divs vacíos
+          if (child.tagName === 'DIV' && !child.textContent?.trim()) {
+            child.remove();
+            return;
+          }
+          
+          // Remover múltiples BRs consecutivos (max 1)
+          if (child.tagName === 'BR') {
+            let nextSibling = child.nextSibling;
+            while (nextSibling && nextSibling.nodeName === 'BR') {
+              const toRemove = nextSibling;
+              nextSibling = nextSibling.nextSibling;
+              toRemove.remove();
+            }
+          }
+          
+          // Recursivo
+          removeEmptyElements(child);
+        }
+      });
+    };
+    
+    removeEmptyElements(temp);
+    
+    return temp.innerHTML;
+  };
 
   const handleInput = () => {
     if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
+      const normalized = normalizeHTML(editorRef.current.innerHTML);
+      onChange(normalized);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Al presionar Enter, insertar un <br> en lugar de crear un nuevo párrafo
+    // Al presionar Enter, crear un nuevo párrafo limpio
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      document.execCommand('insertLineBreak');
+      
+      const selection = window.getSelection();
+      if (!selection || !selection.rangeCount) return;
+      
+      const range = selection.getRangeAt(0);
+      
+      // Crear un nuevo párrafo
+      const p = document.createElement('p');
+      const br = document.createElement('br');
+      p.appendChild(br);
+      
+      // Insertar el nuevo párrafo
+      range.deleteContents();
+      range.insertNode(p);
+      
+      // Mover el cursor al nuevo párrafo
+      const newRange = document.createRange();
+      newRange.setStart(p, 0);
+      newRange.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(newRange);
+      
       handleInput();
     }
   };
@@ -46,10 +105,19 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escribe aquí..
   const execCommand = (command: string, value: string | undefined = undefined) => {
     document.execCommand(command, false, value);
     editorRef.current?.focus();
+    setTimeout(() => handleInput(), 10);
+  };
+
+  const formatBlock = (tag: string) => {
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return;
+    
+    document.execCommand('formatBlock', false, tag);
+    editorRef.current?.focus();
+    setTimeout(() => handleInput(), 10);
   };
 
   const addLink = () => {
-    // Guardar la selección antes de que el prompt la borre
     const selection = window.getSelection();
     if (!selection) return;
     
@@ -61,41 +129,22 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escribe aquí..
     }
     
     if (!selectedText || !range) {
-      // Si no hay texto seleccionado, pedir el texto del enlace
       const linkText = window.prompt('Texto del enlace:');
       if (!linkText) return;
       
       const url = window.prompt('URL del enlace:');
       if (!url) return;
       
-      // Insertar el enlace con el texto
-      const link = `<a href="${url}" style="color: #FF5100; text-decoration: underline;">${linkText}</a>&nbsp;`;
+      const link = `<a href="${url}">${linkText}</a>&nbsp;`;
       execCommand('insertHTML', link);
     } else {
-      // Si hay texto seleccionado, guardar el rango
       const savedRange = range.cloneRange();
-      
-      // Pedir la URL
       const url = window.prompt('URL del enlace:');
       if (!url) return;
       
-      // Restaurar la selección
       selection.removeAllRanges();
       selection.addRange(savedRange);
-      
-      // Crear el enlace
       execCommand('createLink', url);
-      
-      // Aplicar estilos al enlace creado
-      setTimeout(() => {
-        if (editorRef.current) {
-          const links = editorRef.current.querySelectorAll('a');
-          links.forEach(link => {
-            link.style.color = '#FF5100';
-            link.style.textDecoration = 'underline';
-          });
-        }
-      }, 10);
     }
   };
 
@@ -120,52 +169,50 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escribe aquí..
   };
 
   const clearFormatting = () => {
-    execCommand('removeFormat');
-    execCommand('unlink');
-    // Forzar la actualización del estado después de limpiar el formato
-    setTimeout(() => {
-      handleInput();
-    }, 10);
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return;
+    
+    const range = selection.getRangeAt(0);
+    const selectedContent = range.extractContents();
+    
+    // Obtener solo el texto plano
+    const textContent = selectedContent.textContent || '';
+    
+    // Crear un nodo de texto limpio
+    const textNode = document.createTextNode(textContent);
+    
+    // Insertar el texto limpio
+    range.insertNode(textNode);
+    
+    // Seleccionar el texto recién insertado
+    const newRange = document.createRange();
+    newRange.selectNodeContents(textNode);
+    selection.removeAllRanges();
+    selection.addRange(newRange);
+    
+    setTimeout(() => handleInput(), 10);
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
     
     const text = e.clipboardData.getData('text/plain');
-    const html = e.clipboardData.getData('text/html');
     
-    // Si hay HTML, preguntar al usuario
-    if (html && html.trim() !== '') {
-      const pasteAsPlainText = window.confirm(
-        '¿Pegar como texto sin formato?\n\n' +
-        'Sí = Pegar solo el texto\n' +
-        'No = Mantener formato original'
-      );
-      
-      if (pasteAsPlainText) {
-        // Pegar como texto plano
-        document.execCommand('insertText', false, text);
-      } else {
-        // Pegar con formato original
-        document.execCommand('insertHTML', false, html);
-      }
-    } else {
-      // Si solo hay texto plano, pegarlo directamente
-      document.execCommand('insertText', false, text);
-    }
+    // Siempre pegar como texto sin formato
+    document.execCommand('insertText', false, text);
+    setTimeout(() => handleInput(), 10);
   };
 
   const toggleHtmlView = () => {
     if (!showHtml) {
-      // Cambiar a vista HTML: guardar el contenido actual
       if (editorRef.current) {
         setHtmlCode(editorRef.current.innerHTML);
       }
     } else {
-      // Volver a vista visual: aplicar cambios del HTML
       if (editorRef.current) {
-        editorRef.current.innerHTML = htmlCode;
-        onChange(htmlCode);
+        const normalized = normalizeHTML(htmlCode);
+        editorRef.current.innerHTML = normalized;
+        onChange(normalized);
       }
     }
     setShowHtml(!showHtml);
@@ -177,45 +224,29 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escribe aquí..
 
   return (
     <div className="rich-text-editor border border-foreground/20 rounded-lg overflow-hidden bg-white">
-      {/* Toolbar */}
+      {/* Toolbar simplificada */}
       <div className="border-b border-foreground/20 bg-[#F3F2EF] p-2 flex flex-wrap gap-1">
-        {/* Headings */}
+        {/* Headings - solo H2 y H3 */}
         <button
           type="button"
-          onClick={() => execCommand('formatBlock', 'h1')}
-          className="p-2 rounded hover:bg-white/50 transition-colors text-foreground/70 font-bold text-sm"
-          title="Título 1"
-        >
-          H1
-        </button>
-        <button
-          type="button"
-          onClick={() => execCommand('formatBlock', 'h2')}
-          className="p-2 rounded hover:bg-white/50 transition-colors text-foreground/70 font-bold text-sm"
+          onClick={() => formatBlock('h2')}
+          className="p-2 rounded hover:bg-white/50 transition-colors text-foreground/70 flex items-center gap-1"
           title="Título 2"
         >
-          H2
+          <Heading2 size={18} />
         </button>
         <button
           type="button"
-          onClick={() => execCommand('formatBlock', 'h3')}
-          className="p-2 rounded hover:bg-white/50 transition-colors text-foreground/70 font-bold text-sm"
+          onClick={() => formatBlock('h3')}
+          className="p-2 rounded hover:bg-white/50 transition-colors text-foreground/70 flex items-center gap-1"
           title="Título 3"
         >
-          H3
+          <Heading3 size={18} />
         </button>
         <button
           type="button"
-          onClick={() => execCommand('formatBlock', 'h4')}
-          className="p-2 rounded hover:bg-white/50 transition-colors text-foreground/70 font-bold text-sm"
-          title="Título 4"
-        >
-          H4
-        </button>
-        <button
-          type="button"
-          onClick={() => execCommand('formatBlock', 'p')}
-          className="p-2 rounded hover:bg-white/50 transition-colors text-foreground/70 text-sm"
+          onClick={() => formatBlock('p')}
+          className="p-2 rounded hover:bg-white/50 transition-colors text-foreground/70 text-sm font-medium"
           title="Párrafo normal"
         >
           P
@@ -223,26 +254,7 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escribe aquí..
 
         <div className="w-px bg-foreground/20 mx-1" />
 
-        {/* Font sizes */}
-        <select
-          onChange={(e) => execCommand('fontSize', e.target.value)}
-          className="px-2 py-1 rounded hover:bg-white/50 transition-colors text-foreground/70 text-sm border-0 bg-transparent cursor-pointer"
-          title="Tamaño de fuente"
-          defaultValue=""
-        >
-          <option value="">Tamaño</option>
-          <option value="1">Muy pequeño</option>
-          <option value="2">Pequeño</option>
-          <option value="3">Normal</option>
-          <option value="4">Medio</option>
-          <option value="5">Grande</option>
-          <option value="6">Muy grande</option>
-          <option value="7">Máximo</option>
-        </select>
-
-        <div className="w-px bg-foreground/20 mx-1" />
-
-        {/* Text formatting */}
+        {/* Text formatting - solo básicos */}
         <button
           type="button"
           onClick={() => execCommand('bold')}
@@ -258,14 +270,6 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escribe aquí..
           title="Cursiva"
         >
           <Italic size={18} />
-        </button>
-        <button
-          type="button"
-          onClick={() => execCommand('underline')}
-          className="p-2 rounded hover:bg-white/50 transition-colors text-foreground/70"
-          title="Subrayado"
-        >
-          <Underline size={18} />
         </button>
 
         <div className="w-px bg-foreground/20 mx-1" />
@@ -286,34 +290,6 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escribe aquí..
           title="Lista numerada"
         >
           <ListOrdered size={18} />
-        </button>
-
-        <div className="w-px bg-foreground/20 mx-1" />
-
-        {/* Alignment */}
-        <button
-          type="button"
-          onClick={() => execCommand('justifyLeft')}
-          className="p-2 rounded hover:bg-white/50 transition-colors text-foreground/70"
-          title="Alinear izquierda"
-        >
-          <AlignLeft size={18} />
-        </button>
-        <button
-          type="button"
-          onClick={() => execCommand('justifyCenter')}
-          className="p-2 rounded hover:bg-white/50 transition-colors text-foreground/70"
-          title="Centrar"
-        >
-          <AlignCenter size={18} />
-        </button>
-        <button
-          type="button"
-          onClick={() => execCommand('justifyRight')}
-          className="p-2 rounded hover:bg-white/50 transition-colors text-foreground/70"
-          title="Alinear derecha"
-        >
-          <AlignRight size={18} />
         </button>
 
         <div className="w-px bg-foreground/20 mx-1" />
@@ -343,7 +319,7 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escribe aquí..
           type="button"
           onClick={clearFormatting}
           className="p-2 rounded hover:bg-white/50 transition-colors text-foreground/70"
-          title="Borrar formato"
+          title="Borrar formato (selecciona texto primero)"
         >
           <Eraser size={18} />
         </button>
@@ -354,8 +330,8 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escribe aquí..
         <button
           type="button"
           onClick={toggleHtmlView}
-          className="p-2 rounded hover:bg-white/50 transition-colors text-foreground/70"
-          title="Ver HTML"
+          className={`p-2 rounded transition-colors ${showHtml ? 'bg-primary/10 text-primary' : 'hover:bg-white/50 text-foreground/70'}`}
+          title="Ver/Editar HTML"
         >
           <Code size={18} />
         </button>
@@ -373,7 +349,7 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escribe aquí..
             onInput={handleInput}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            className="prose prose-sm max-w-none focus:outline-none p-4"
+            className="focus:outline-none p-4"
             style={{ minHeight: height }}
             data-placeholder={placeholder}
             onPaste={handlePaste}
@@ -397,99 +373,106 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escribe aquí..
           pointer-events: none;
           position: absolute;
         }
+        
         .rich-text-editor [contenteditable] {
           min-height: ${height};
-          line-height: 1.6;
+          line-height: 1.7;
+          color: #333;
+          font-size: 16px;
         }
+        
         .rich-text-editor [contenteditable]:focus {
           outline: none;
         }
-        .rich-text-editor [contenteditable] h1 {
-          font-size: 2.5em;
-          font-weight: bold;
-          margin-top: 0.67em;
-          margin-bottom: 0.67em;
-          line-height: 1.2;
-        }
+        
+        /* Estilos estandarizados para headings */
         .rich-text-editor [contenteditable] h2 {
-          font-size: 2em;
-          font-weight: bold;
-          margin-top: 0.83em;
-          margin-bottom: 0.83em;
+          font-size: 1.75em;
+          font-weight: 700;
+          margin: 1.2em 0 0.6em 0;
           line-height: 1.3;
+          color: #1a1a1a;
         }
+        
         .rich-text-editor [contenteditable] h3 {
-          font-size: 1.5em;
-          font-weight: bold;
-          margin-top: 1em;
-          margin-bottom: 1em;
+          font-size: 1.4em;
+          font-weight: 600;
+          margin: 1em 0 0.5em 0;
           line-height: 1.4;
+          color: #1a1a1a;
         }
-        .rich-text-editor [contenteditable] h4 {
-          font-size: 1.25em;
-          font-weight: bold;
-          margin-top: 1.33em;
-          margin-bottom: 1.33em;
-          line-height: 1.4;
+        
+        /* Párrafos con espaciado consistente */
+        .rich-text-editor [contenteditable] p {
+          margin: 0 0 1em 0;
+          line-height: 1.7;
+          font-size: 16px;
         }
+        
+        .rich-text-editor [contenteditable] p:last-child {
+          margin-bottom: 0;
+        }
+        
+        /* Listas con espaciado consistente */
         .rich-text-editor [contenteditable] ul,
         .rich-text-editor [contenteditable] ol {
           padding-left: 1.5rem;
-          margin: 0.5rem 0;
+          margin: 1em 0;
         }
+        
         .rich-text-editor [contenteditable] ul {
           list-style-type: disc;
         }
+        
         .rich-text-editor [contenteditable] ol {
           list-style-type: decimal;
         }
+        
         .rich-text-editor [contenteditable] li {
-          margin: 0.25rem 0;
+          margin: 0.3em 0;
+          line-height: 1.7;
         }
+        
+        /* Enlaces con estilo de marca */
         .rich-text-editor [contenteditable] a {
           color: #FF5100;
           text-decoration: underline;
         }
+        
         .rich-text-editor [contenteditable] a:hover {
           text-decoration: none;
         }
+        
+        /* Imágenes responsivas */
         .rich-text-editor [contenteditable] img {
           max-width: 100%;
           height: auto;
           border-radius: 0.5rem;
-          margin: 1rem 0;
-        }
-        .rich-text-editor [contenteditable] p {
-          margin: 0.2rem 0;
-        }
-        .rich-text-editor [contenteditable] br {
+          margin: 1.5em 0;
           display: block;
-          margin: 0;
-          line-height: 1.6;
         }
-        .rich-text-editor [contenteditable] div {
-          margin: 0;
+        
+        /* Negrita e itálica */
+        .rich-text-editor [contenteditable] strong,
+        .rich-text-editor [contenteditable] b {
+          font-weight: 700;
         }
-        .rich-text-editor [contenteditable] font[size="1"] {
-          font-size: 10px;
+        
+        .rich-text-editor [contenteditable] em,
+        .rich-text-editor [contenteditable] i {
+          font-style: italic;
         }
-        .rich-text-editor [contenteditable] font[size="2"] {
-          font-size: 13px;
+        
+        /* Limitar BRs consecutivos */
+        .rich-text-editor [contenteditable] br + br {
+          display: none;
         }
-        .rich-text-editor [contenteditable] font[size="3"] {
-          font-size: 16px;
-        }
-        .rich-text-editor [contenteditable] font[size="4"] {
-          font-size: 18px;
-        }
-        .rich-text-editor [contenteditable] font[size="5"] {
-          font-size: 24px;
-        }
-        .rich-text-editor [contenteditable] font[size="6"] {
-          font-size: 32px;
-        }
-        .rich-text-editor [contenteditable] font[size="7"] {
-          font-size: 48px;
+        
+        /* Remover estilos inline no deseados */
+        .rich-text-editor [contenteditable] font,
+        .rich-text-editor [contenteditable] span[style] {
+          font-size: inherit !important;
+          font-family: inherit !important;
         }
       `}</style>
     </div>

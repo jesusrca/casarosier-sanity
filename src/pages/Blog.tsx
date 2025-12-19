@@ -40,6 +40,13 @@ export function Blog() {
         : settings.blogHeroImage?.url)
     : 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=1920';
 
+  // Obtener la imagen del título del blog si existe
+  const blogTitleImage = settings?.blogTitleImage 
+    ? (typeof settings.blogTitleImage === 'string' 
+        ? settings.blogTitleImage 
+        : settings.blogTitleImage?.url)
+    : null;
+
   // Separar posts destacados y normales
   const featuredPosts = blogPosts.filter(post => post.featured);
   const regularPosts = blogPosts.filter(post => !post.featured);
@@ -89,7 +96,9 @@ export function Blog() {
           backgroundImage={blogHeroImage}
           title="Blog"
           subtitle="Técnicas, historias y creaciones"
-          useTextTitle={true}
+          useTextTitle={!blogTitleImage} // Si no hay imagen de título, usar texto
+          titleImage={blogTitleImage || undefined} // Pasar la imagen del título si existe
+          reducedHeight={true} // Reducir la altura del hero del blog un 30%
         />
       )}
 

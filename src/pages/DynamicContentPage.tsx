@@ -261,20 +261,12 @@ export function DynamicContentPage() {
                   {/* Left Column: Price and Includes */}
                   {type !== 'private' && (content.price || content.includes) && (
                     <div className="space-y-6">
-                      {content.price && content.price !== '0' && content.price !== 0 && (
-                        <div>
-                          <p className="text-sm uppercase tracking-wider text-foreground/60 mb-2">
-                            PRECIO
-                          </p>
-                          <p className="text-2xl">
-                            {content.price}€
-                          </p>
-                        </div>
-                      )}
-
                       {/* Opciones de precio adicionales */}
                       {content.priceOptions && content.priceOptions.filter((opt: any) => opt.price && opt.price !== '0' && opt.price !== 0 && opt.label && opt.label.trim() !== '').length > 0 && (
                         <div className="space-y-3">
+                          <p className="text-sm uppercase tracking-wider text-foreground/60 mb-2">
+                            PRECIO
+                          </p>
                           {content.priceOptions.filter((opt: any) => opt.price && opt.price !== '0' && opt.price !== 0 && opt.label && opt.label.trim() !== '').map((option: any, index: number) => (
                             <div
                               key={index}
@@ -537,7 +529,7 @@ export function DynamicContentPage() {
                     <div className="space-y-6">
                       {content.content.activities.map((activity, index) => (
                         <div key={index} className="space-y-2">
-                          <h4 className="text-base text-primary font-medium">{activity.title}</h4>
+                          <h4 className="text-base text-primary font-medium" style={{ fontSize: '1.1em' }}>{activity.title}</h4>
                           <p className="text-base leading-relaxed text-foreground/70">
                             {activity.description}{' '}
                             {activity.link && (
@@ -562,9 +554,7 @@ export function DynamicContentPage() {
                       <div className="space-y-4">
                         {content.content.modules.map((item, index) => (
                           <AccordionSection key={index} title={item.title} defaultOpen={index === 0}>
-                            <p className="text-base text-foreground/80">
-                              {item.description}
-                            </p>
+                            {item.description}
                           </AccordionSection>
                         ))}
                       </div>

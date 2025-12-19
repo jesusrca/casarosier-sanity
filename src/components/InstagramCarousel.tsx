@@ -96,7 +96,7 @@ export function InstagramCarousel({
           transition={{ duration: 0.6 }}
           className="text-center mb-8"
         >
-          <h2 className="mb-4">
+          <h2 className="mb-4 whitespace-pre-line">
             {title}
           </h2>
           <div className="flex items-center justify-center gap-2 text-sm text-foreground/60">

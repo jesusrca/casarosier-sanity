@@ -84,13 +84,13 @@ export function ScrollHeader() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between py-3">
+        <div className="flex items-center justify-between py-5">
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <img 
               src={logoImage} 
               alt="Casa Rosier" 
-              className="h-10 w-auto hover:opacity-90 transition-opacity"
+              className="h-[52px] w-auto hover:opacity-90 transition-opacity"
             />
           </Link>
 

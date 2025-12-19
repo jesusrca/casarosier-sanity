@@ -645,6 +645,17 @@ export function SectionEditor({
             </div>
 
             <div>
+              <label className="block text-sm mb-2">Subtítulo de la sección (opcional)</label>
+              <input
+                type="text"
+                value={section.subtitle || ''}
+                onChange={(e) => updateField('subtitle', e.target.value)}
+                placeholder="Regalo una experiencia única"
+                className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+
+            <div>
               <label className="block text-sm mb-3">Tarjetas Regalo</label>
               {(section.giftCards || []).map((card: any, index: number) => (
                 <div key={index} className="mb-6 p-4 border-2 border-foreground/20 rounded-lg bg-foreground/5">

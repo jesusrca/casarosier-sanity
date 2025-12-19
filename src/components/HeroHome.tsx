@@ -53,10 +53,10 @@ export function HeroHome() {
   useEffect(() => {
     if (heroTextImages.length <= 1) return;
 
-    // Show second image after 5 seconds, then stop
+    // Show second image after 2 seconds, then stop
     const timeout = setTimeout(() => {
       setCurrentTextImageIndex(1);
-    }, 5000);
+    }, 2000);
 
     return () => clearTimeout(timeout);
   }, [heroTextImages.length]);
@@ -271,7 +271,7 @@ export function HeroHome() {
       </div>
 
       {/* Center Content - Hero Text */}
-      <div className="relative z-10 flex items-center justify-center px-4" style={{ height: 'calc(100vh - 200px)' }}>
+      <div className="relative z-10 md:flex-1 md:flex md:items-center md:justify-center md:mt-[10vh] px-4 absolute md:relative top-[calc(40%-20px)] md:top-auto -translate-y-1/2 md:translate-y-0 left-0 right-0">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -287,7 +287,7 @@ export function HeroHome() {
               className={`w-full h-auto ${index === 0 ? 'relative' : 'absolute top-0 left-0'}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: currentTextImageIndex >= index ? 1 : 0 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.2 }}
             />
           ))}
         </motion.div>

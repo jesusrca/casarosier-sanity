@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Instagram, Mail, Phone, Facebook, Youtube } from 'lucide-react';
+import { Instagram, Mail, Phone, Facebook } from 'lucide-react';
 import { settingsAPI, messagesAPI } from '../utils/api';
 import { InstagramCarousel } from './InstagramCarousel';
 import { Logo } from './Logo';
@@ -180,7 +180,7 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-primary transition-colors cursor-pointer inline-block"
               >
-                C/ Villarroel 206 - El Exemple - Barcelona 08036, España
+                C/ Villarroel 206 - El Eixample - Barcelona 08036, España
               </a>
             </div>
 
@@ -208,17 +208,6 @@ export function Footer() {
                   aria-label="Facebook"
                 >
                   <Facebook size={20} />
-                </motion.a>
-                <motion.a
-                  href="https://youtube.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-foreground text-background flex items-center justify-center hover:bg-primary transition-colors"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  aria-label="YouTube"
-                >
-                  <Youtube size={20} />
                 </motion.a>
               </div>
             </div>
