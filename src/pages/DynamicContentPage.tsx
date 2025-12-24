@@ -3,16 +3,17 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useContent } from '../contexts/ContentContext';
-import { SEO } from '../components/SEO';
+import { SEOHead } from '../components/SEOHead';
 import { NotFound } from './NotFound';
 import { AccordionSection } from '../components/AccordionSection';
 import { Hero } from '../components/Hero';
 import { PageSkeleton } from '../components/PageSkeleton';
+import { LoadingScreen } from '../components/LoadingScreen';
 import { settingsAPI } from '../utils/api';
 
 interface ContentItem {
   id: string;
-  type: 'class' | 'workshop' | 'private';
+  type: 'class' | 'workshop' | 'private' | 'gift-card';
   title: string;
   slug: string;
   subtitle?: string;
@@ -42,6 +43,10 @@ interface ContentItem {
     additionalInfo?: string;
     contactPhone?: string;
     contactEmail?: string;
+    infoBlocks?: Array<{
+      title: string;
+      description: string;
+    }>;
     modules?: Array<{
       title: string;
       description: string;
@@ -55,6 +60,7 @@ interface ContentItem {
       link: string;
     }>;
     ctaButtonText?: string;
+    showBottomCTA?: boolean;
   };
   visible: boolean;
   seo?: {
@@ -68,9 +74,10 @@ interface ContentItem {
 
 export function DynamicContentPage() {
   const { slug } = useParams<{ slug: string }>();
-  const { getClassBySlug, getWorkshopBySlug, getPrivateBySlug, loading: contentLoading } = useContent();
+  const { getClassBySlug, getWorkshopBySlug, getPrivateBySlug, getGiftCardBySlug, loading: contentLoading } = useContent();
   const [images, setImages] = useState<string[]>([]);
   const [siteSettings, setSiteSettings] = useState<any>(null);
+  const [showNotFound, setShowNotFound] = useState(false);
 
   // Load site settings for payment methods
   useEffect(() => {
@@ -91,6 +98,8 @@ export function DynamicContentPage() {
     ? 'class' 
     : currentPath.startsWith('/privada')
     ? 'private'
+    : currentPath.startsWith('/tarjeta-regalo')
+    ? 'gift-card'
     : 'workshop';
 
   // Buscar el contenido en el contexto (datos ya cargados)
@@ -98,7 +107,22 @@ export function DynamicContentPage() {
     ? getClassBySlug(slug || '')
     : type === 'private'
     ? getPrivateBySlug(slug || '')
+    : type === 'gift-card'
+    ? getGiftCardBySlug(slug || '')
     : getWorkshopBySlug(slug || '');
+
+  // Control del delay antes de mostrar 404 para evitar flash durante transiciones
+  useEffect(() => {
+    if (!content && !contentLoading) {
+      // Dar un pequeño margen de tiempo antes de mostrar 404
+      const timer = setTimeout(() => {
+        setShowNotFound(true);
+      }, 300); // 300ms de delay, coincide con la duración de la transición
+      return () => clearTimeout(timer);
+    } else {
+      setShowNotFound(false);
+    }
+  }, [content, contentLoading, slug]);
 
   // Debug: Ver qué datos tiene content.content
   useEffect(() => {
@@ -139,13 +163,13 @@ export function DynamicContentPage() {
     }
   }, [content]);
 
-  // Si está cargando y no hay contenido aún, mostrar skeleton
-  if (contentLoading && !content) {
+  // Si está cargando o esperando para mostrar 404, mostrar skeleton
+  if (contentLoading || (!content && !showNotFound)) {
     return <PageSkeleton />;
   }
 
-  // Si no está cargando y no hay contenido, mostrar 404
-  if (!contentLoading && !content) {
+  // Si no hay contenido después de cargar, mostrar 404
+  if (!content && showNotFound) {
     return <NotFound />;
   }
 
@@ -168,7 +192,7 @@ export function DynamicContentPage() {
 
   return (
     <div className="min-h-screen">
-      <SEO 
+      <SEOHead
         title={content.seo?.metaTitle || content.title}
         description={content.seo?.metaDescription || content.description}
         keywords={content.seo?.keywords}
@@ -188,7 +212,7 @@ export function DynamicContentPage() {
             <div className="space-y-6 lg:sticky lg:top-8 lg:self-start">
               {images.length > 0 && (
                 <>
-                  <div className="relative aspect-square overflow-hidden rounded-lg shadow-lg">
+                  <div className="relative aspect-[100/115] overflow-hidden rounded-lg shadow-lg">
                     <AnimatePresence initial={false}>
                       <motion.img
                         key={images[0]}
@@ -237,7 +261,7 @@ export function DynamicContentPage() {
               <div>
                 <h2 className="mb-4 sm:mb-6">{content.title.toUpperCase()}</h2>
                 {content.subtitle && (
-                  <p className="text-lg leading-relaxed mb-4 text-[#7B7269] text-center uppercase tracking-[0.1em] font-light">
+                  <p className="text-lg leading-relaxed mb-4 text-[#7B7269] text-center uppercase tracking-[0.1em] font-light px-[10%]">
                     {content.subtitle}
                   </p>
                 )}
@@ -250,7 +274,7 @@ export function DynamicContentPage() {
                 {content.description && (
                   <div 
                     className="text-base leading-relaxed text-foreground/80 space-y-4"
-                    dangerouslySetInnerHTML={{ __html: content.description.replace(/\n/g, '<br/>') }}
+                    dangerouslySetInnerHTML={{ __html: content.description }}
                   />
                 )}
               </div>
@@ -259,10 +283,10 @@ export function DynamicContentPage() {
               {(content.price || content.includes || content.schedule) && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Left Column: Price and Includes */}
-                  {type !== 'private' && (content.price || content.includes) && (
+                  {(content.price || content.includes) && (
                     <div className="space-y-6">
-                      {/* Opciones de precio adicionales */}
-                      {content.priceOptions && content.priceOptions.filter((opt: any) => opt.price && opt.price !== '0' && opt.price !== 0 && opt.label && opt.label.trim() !== '').length > 0 && (
+                      {/* Opciones de precio adicionales - solo para NO privadas */}
+                      {type !== 'private' && content.priceOptions && content.priceOptions.filter((opt: any) => opt.price && opt.price !== '0' && opt.price !== 0 && opt.label && opt.label.trim() !== '').length > 0 && (
                         <div className="space-y-3">
                           <p className="text-sm uppercase tracking-wider text-foreground/60 mb-2">
                             PRECIO
@@ -293,26 +317,28 @@ export function DynamicContentPage() {
                         </div>
                       )}
 
-                      <motion.button
-                        onClick={handleConsultar}
-                        className="border-2 border-primary text-primary px-6 py-2 rounded-lg text-sm overflow-hidden relative"
-                        initial={{ backgroundColor: 'transparent' }}
-                        whileHover={{ 
-                          backgroundColor: '#FF5100',
-                          color: '#FFFFFF',
-                          transition: { duration: 0.3 }
-                        }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        Consultar
-                      </motion.button>
+                      {type !== 'private' && (
+                        <motion.button
+                          onClick={handleConsultar}
+                          className="border-2 border-primary text-primary px-6 py-2 rounded-lg text-sm overflow-hidden relative"
+                          initial={{ backgroundColor: 'transparent' }}
+                          whileHover={{ 
+                            backgroundColor: '#FF5100',
+                            color: '#FFFFFF',
+                            transition: { duration: 0.3 }
+                          }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          Consultar
+                        </motion.button>
+                      )}
                     </div>
                   )}
 
                   {/* Right Column: Schedule */}
                   {(content.duration || (content.schedule && (content.schedule.description || (content.schedule.enabled !== false && content.schedule.slots && content.schedule.slots.length > 0)))) && (
                     <div className="space-y-6">
-                      {content.duration && (
+                      {content.duration && content.duration.trim() && (
                         <div>
                           <p className="text-sm uppercase tracking-wider text-foreground/60 mb-2">
                             DURACIÓN
@@ -323,10 +349,13 @@ export function DynamicContentPage() {
                         </div>
                       )}
                       
-                      {content.schedule && (content.schedule.description || (content.schedule.enabled !== false && content.schedule.slots && content.schedule.slots.length > 0)) && (
+                      {content.schedule && (
+                        (content.schedule.description && content.schedule.description.trim()) || 
+                        (content.schedule.enabled !== false && content.schedule.slots && content.schedule.slots.length > 0)
+                      ) && (
                         <div className="space-y-3">
                           <h3 className="text-lg">Horarios</h3>
-                          {content.schedule.description && (
+                          {content.schedule.description && content.schedule.description.trim() && (
                             <p className="text-sm text-foreground/70 leading-relaxed">
                               {content.schedule.description}
                             </p>
@@ -451,7 +480,7 @@ export function DynamicContentPage() {
                 )}
 
                 {/* Additional Info */}
-                {(content.content?.contactPhone || content.content?.contactEmail || content.content?.additionalInfo) && (
+                {(content.content?.contactPhone || content.content?.contactEmail || content.content?.additionalInfo || content.content?.infoBlocks?.length) && (
                   <div className="space-y-4">
                     <h3 className="text-xl mb-3">INFORMACIÓN ADICIONAL</h3>
                     <div className="bg-primary/3 rounded-lg p-6">
@@ -473,13 +502,42 @@ export function DynamicContentPage() {
                           {content.content?.contactEmail || 'info@casarosierceramica.com'}
                         </a>
                       </p>
-                      {content.content?.additionalInfo && (
+                      {/* Solo mostrar additionalInfo si NO es gift-card */}
+                      {content.type !== 'gift-card' && content.content?.additionalInfo && (
                         <div 
                           className="text-sm leading-relaxed text-foreground/70 pt-3 border-t border-foreground/10"
                           dangerouslySetInnerHTML={{ __html: content.content.additionalInfo.replace(/\\n/g, '<br/>') }}
                         />
                       )}
                     </div>
+
+                    {/* Info Blocks para Gift Cards */}
+                    {content.type === 'gift-card' && content.content?.infoBlocks && content.content.infoBlocks.length > 0 && (
+                      <div className="space-y-3 mt-[10px] mr-[0px] mb-[0px] ml-[0px]">
+                        {content.content.infoBlocks.map((block: any, index: number) => (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: index * 0.1 }}
+                            className="rounded-lg p-6"
+                          >
+                            {block.title && (
+                              <h4 className="text-lg font-medium text-primary mb-3">
+                                {block.title}
+                              </h4>
+                            )}
+                            {block.description && (
+                              <div 
+                                className="text-sm leading-relaxed text-[#2D2520]/80 rich-content"
+                                dangerouslySetInnerHTML={{ __html: block.description }}
+                              />
+                            )}
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
                 
@@ -512,11 +570,11 @@ export function DynamicContentPage() {
                 )}
 
                 {/* Who Can Participate */}
-                {content.content?.whoCanParticipate && (
+                {content.content.whoCanParticipate && content.content.whoCanParticipate.replace(/<[^>]*>/g, '').trim() && (
                   <div className="space-y-4">
                     <h3 className="text-xl mb-3">{content.content.whoCanParticipateTitle || '¿QUIÉN PUEDE PARTICIPAR?'}</h3>
                     <div 
-                      className="text-base leading-relaxed text-foreground/80 prose prose-sm max-w-none"
+                      className="text-base leading-relaxed text-foreground/80 prose prose-sm max-w-none text-[rgba(45,37,32,0.85)]"
                       dangerouslySetInnerHTML={{ __html: content.content.whoCanParticipate }}
                     />
                   </div>
@@ -562,20 +620,23 @@ export function DynamicContentPage() {
                   </>
                 )}
 
-                <div className="pt-6 flex justify-start">
-                  <motion.button
-                    onClick={() => window.open('https://wa.me/34633788860', '_blank')}
-                    className="border-2 border-primary text-primary px-6 py-3 rounded-lg text-sm transition-colors"
-                    whileHover={{ 
-                      backgroundColor: '#FF5100',
-                      color: '#FFFFFF',
-                      transition: { duration: 0.3 }
-                    }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    Inscribirse
-                  </motion.button>
-                </div>
+                {/* Solo mostrar si está habilitado (por defecto true) */}
+                {(content.content?.showBottomCTA !== false) && (
+                  <div className="pt-6 flex justify-start">
+                    <motion.button
+                      onClick={() => window.open('https://wa.me/34633788860', '_blank')}
+                      className="border-2 border-primary text-primary px-6 py-3 rounded-lg text-sm transition-colors"
+                      whileHover={{ 
+                        backgroundColor: '#FF5100',
+                        color: '#FFFFFF',
+                        transition: { duration: 0.3 }
+                      }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      Inscribirse
+                    </motion.button>
+                  </div>
+                )}
               </motion.div>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { projectId, publicAnonKey } from './supabase/info';
 import { supabase } from './supabase/client';
+import { apiCache } from './cache';
 
 // Re-export supabase client for backwards compatibility
 export { supabase };
@@ -14,58 +15,105 @@ async function getAuthToken(): Promise<string | null> {
     // Si hay error de refresh token, limpiar la sesión
     if (error) {
       console.warn('Session error, clearing invalid session:', error.message);
+      
+      // Limpiar sesión y storage
       await supabase.auth.signOut();
+      localStorage.removeItem('supabase.auth.token');
+      
+      // Si estamos en admin, redirigir al login
+      if (window.location.pathname.startsWith('/admin')) {
+        window.location.href = '/admin/login';
+      }
+      
       return null;
     }
     
     return data.session?.access_token || null;
   } catch (error) {
-    console.warn('Error getting auth token:', error);
-    // Intentar limpiar sesión corrupta
+    console.error('Error getting auth token:', error);
+    
+    // Limpiar en caso de error crítico
     try {
       await supabase.auth.signOut();
-    } catch (e) {
-      // Ignorar errores al hacer signOut
+      localStorage.removeItem('supabase.auth.token');
+    } catch (cleanupError) {
+      console.error('Error during cleanup:', cleanupError);
     }
+    
     return null;
   }
 }
 
-// Generic API call helper
-async function apiCall(endpoint: string, options: RequestInit = {}) {
-  try {
-    const url = `${API_BASE_URL}${endpoint}`;
-    
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...options.headers as Record<string, string>,
-    };
+// Generic API call helper con caché
+async function apiCall(endpoint: string, options: RequestInit = {}, cacheKey?: string, cacheTTL?: number) {
+  const maxRetries = 3;
+  const retryDelay = 1000; // 1 segundo
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // Si es una petición GET y tenemos cacheKey, verificar caché
+      if ((!options.method || options.method === 'GET') && cacheKey) {
+        const cached = apiCache.get(cacheKey);
+        if (cached) {
+          console.log(`✅ Cache hit: ${cacheKey}`);
+          return cached;
+        }
+      }
 
-    // Add auth token if available (only add header if token exists)
-    const token = await getAuthToken();
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    } else {
-      // For public endpoints, use the public anon key
-      headers['Authorization'] = `Bearer ${publicAnonKey}`;
+      const url = `${API_BASE_URL}${endpoint}`;
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...options.headers as Record<string, string>,
+      };
+
+      // Add auth token if available (only add header if token exists)
+      const token = await getAuthToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      } else {
+        // For public endpoints, use the public anon key
+        headers['Authorization'] = `Bearer ${publicAnonKey}`;
+      }
+
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(error.error || `API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Guardar en caché si es GET y tenemos cacheKey
+      if ((!options.method || options.method === 'GET') && cacheKey) {
+        apiCache.set(cacheKey, data, cacheTTL);
+      }
+
+      return data;
+    } catch (error) {
+      const isLastAttempt = attempt === maxRetries;
+      
+      // Si es un error de red (Failed to fetch) y no es el último intento, reintentar
+      if (error instanceof TypeError && error.message === 'Failed to fetch' && !isLastAttempt) {
+        console.warn(`API call failed for ${endpoint} (attempt ${attempt}/${maxRetries}), retrying...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
+        continue;
+      }
+      
+      // Log the error and throw
+      console.warn(`API call failed for ${endpoint}:`, error);
+      
+      // Si es el último intento o no es un error de red, lanzar el error
+      throw error;
     }
-
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-      throw new Error(error.error || `API error: ${response.status}`);
-    }
-
-    return response.json();
-  } catch (error) {
-    // Log the error but don't throw - let components handle gracefully
-    console.warn(`API call failed for ${endpoint}:`, error);
-    throw error;
   }
+  
+  // Esto no debería ocurrir nunca, pero TypeScript lo requiere
+  throw new Error('Max retries exceeded');
 }
 
 // ==================== CONTENT API ====================
@@ -74,7 +122,9 @@ export const contentAPI = {
   // Get all content items
   async getItems(type?: 'class' | 'workshop') {
     const query = type ? `?type=${type}` : '';
-    return apiCall(`/content/items${query}`);
+    const cacheKey = `content:items${query}`;
+    const cacheTTL = 15 * 60 * 1000; // 15 minutos - contenido no cambia frecuentemente
+    return apiCall(`/content/items${query}`, {}, cacheKey, cacheTTL);
   },
 
   // Get all content items (alias for compatibility)
@@ -84,11 +134,15 @@ export const contentAPI = {
 
   // Get single content item
   async getItem(id: string) {
-    return apiCall(`/content/items/${id}`);
+    const cacheKey = `content:item:${id}`;
+    const cacheTTL = 15 * 60 * 1000; // 15 minutos
+    return apiCall(`/content/items/${id}`, {}, cacheKey, cacheTTL);
   },
 
   // Create content item
   async createItem(item: any) {
+    // Limpiar caché al crear
+    apiCache.clear('content:');
     return apiCall('/content/items', {
       method: 'POST',
       body: JSON.stringify(item),
@@ -97,6 +151,8 @@ export const contentAPI = {
 
   // Update content item
   async updateItem(id: string, item: any) {
+    // Limpiar caché al actualizar
+    apiCache.clear('content:');
     return apiCall(`/content/items/${id}`, {
       method: 'PUT',
       body: JSON.stringify(item),
@@ -114,6 +170,8 @@ export const contentAPI = {
 
   // Delete content item
   async deleteItem(id: string) {
+    // Limpiar caché al eliminar
+    apiCache.clear('content:');
     return apiCall(`/content/items/${id}`, {
       method: 'DELETE',
     });
@@ -126,12 +184,16 @@ export const blogAPI = {
   // Get all blog posts
   async getPosts(publishedOnly = false) {
     const query = publishedOnly ? '?published=true' : '';
-    return apiCall(`/blog/posts${query}`);
+    const cacheKey = `blog:posts${query}`;
+    const cacheTTL = 10 * 60 * 1000; // 10 minutos
+    return apiCall(`/blog/posts${query}`, {}, cacheKey, cacheTTL);
   },
 
   // Get single blog post
   async getPost(slug: string) {
-    return apiCall(`/blog/posts/${slug}`);
+    const cacheKey = `blog:post:${slug}`;
+    const cacheTTL = 15 * 60 * 1000; // 15 minutos
+    return apiCall(`/blog/posts/${slug}`, {}, cacheKey, cacheTTL);
   },
 
   // Create or update blog post
@@ -155,11 +217,15 @@ export const blogAPI = {
 export const settingsAPI = {
   // Get site settings
   async getSettings() {
-    return apiCall('/settings');
+    const cacheKey = 'settings:global';
+    const cacheTTL = 20 * 60 * 1000; // 20 minutos - settings cambian muy poco
+    return apiCall('/settings', {}, cacheKey, cacheTTL);
   },
 
   // Update site settings
   async saveSettings(settings: any) {
+    // Limpiar caché de settings al guardar
+    apiCache.delete('settings:global');
     return apiCall('/settings', {
       method: 'POST',
       body: JSON.stringify(settings),
@@ -172,11 +238,15 @@ export const settingsAPI = {
 export const menuAPI = {
   // Get menu structure
   async getMenu() {
-    return apiCall('/menu');
+    const cacheKey = 'menu:structure';
+    const cacheTTL = 20 * 60 * 1000; // 20 minutos - menú cambia muy poco
+    return apiCall('/menu', {}, cacheKey, cacheTTL);
   },
 
   // Update menu structure
   async saveMenu(menu: any) {
+    // Limpiar caché de menú al guardar
+    apiCache.delete('menu:structure');
     return apiCall('/menu', {
       method: 'POST',
       body: JSON.stringify(menu),
@@ -232,7 +302,9 @@ export const uploadAPI = {
 export const pagesAPI = {
   // Get all pages
   async getPages() {
-    return apiCall('/pages');
+    const cacheKey = 'pages:all';
+    const cacheTTL = 15 * 60 * 1000; // 15 minutos
+    return apiCall('/pages', {}, cacheKey, cacheTTL);
   },
 
   // Get all pages (alias for compatibility)
@@ -242,7 +314,9 @@ export const pagesAPI = {
 
   // Get page by slug
   async getPage(slug: string) {
-    return apiCall(`/pages/${slug}`);
+    const cacheKey = `page:${slug}`;
+    const cacheTTL = 15 * 60 * 1000; // 15 minutos
+    return apiCall(`/pages/${slug}`, {}, cacheKey, cacheTTL);
   },
 
   // Create page
@@ -257,6 +331,9 @@ export const pagesAPI = {
 
   // Delete page
   async deletePage(slug: string) {
+    // Limpiar caché
+    apiCache.delete('pages:all');
+    apiCache.delete(`page:${slug}`);
     return apiCall(`/pages/${slug}`, {
       method: 'DELETE',
     });
@@ -264,6 +341,9 @@ export const pagesAPI = {
 
   // Create/Update page
   async savePage(slug: string, page: any) {
+    // Limpiar caché al guardar
+    apiCache.delete('pages:all');
+    apiCache.delete(`page:${slug}`);
     return apiCall(`/pages/${slug}`, {
       method: 'POST',
       body: JSON.stringify(page),

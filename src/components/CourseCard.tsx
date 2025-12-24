@@ -21,7 +21,7 @@ export function CourseCard({ title, subtitle, image, link = '#', index, hideSubt
     >
       <Link to={link} className="block">
         {/* Image Container */}
-        <div className="relative h-80 md:h-64 overflow-hidden rounded-lg">
+        <div className="relative h-[405px] sm:h-[446px] md:h-[323px] overflow-hidden rounded-lg">
           <motion.img
             src={image}
             alt={title}

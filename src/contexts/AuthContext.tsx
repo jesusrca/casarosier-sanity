@@ -55,7 +55,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkSession = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      // Si hay error de refresh token, limpiar todo
+      if (error) {
+        console.warn('Session error detected:', error.message);
+        
+        if (error.message?.includes('refresh') || error.message?.includes('token')) {
+          console.log('Invalid refresh token, cleaning up');
+          await supabase.auth.signOut();
+          localStorage.removeItem('supabase.auth.token');
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+      }
+      
       if (session?.user) {
         const role = await fetchUserRole(session.user.id, session.access_token);
         setUser({
@@ -68,6 +83,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Error checking session:', error);
+      // Limpiar sesión en caso de error
+      try {
+        await supabase.auth.signOut();
+        localStorage.removeItem('supabase.auth.token');
+      } catch (cleanupError) {
+        console.error('Error during cleanup:', cleanupError);
+      }
       setUser(null);
     } finally {
       setLoading(false);

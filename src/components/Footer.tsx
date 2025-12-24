@@ -175,7 +175,7 @@ export function Footer() {
             <div>
               <h4 className="mb-4">Visítanos:</h4>
               <a 
-                href="https://www.google.com/maps/search/?api=1&query=C%2F+Villarroel+206+El+Exemple+Barcelona+08036+España"
+                href="https://maps.app.goo.gl/XMba2UZrDb7RjTVh6"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-primary transition-colors cursor-pointer inline-block"
@@ -188,7 +188,7 @@ export function Footer() {
               <h4 className="mb-4">Síguenos en nuestras redes:</h4>
               <div className="flex space-x-4">
                 <motion.a
-                  href="https://instagram.com"
+                  href="https://www.instagram.com/casarosier/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full bg-foreground text-background flex items-center justify-center hover:bg-primary transition-colors"
@@ -199,7 +199,7 @@ export function Footer() {
                   <Instagram size={20} />
                 </motion.a>
                 <motion.a
-                  href="https://facebook.com"
+                  href="https://www.facebook.com/casarosier"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full bg-foreground text-background flex items-center justify-center hover:bg-primary transition-colors"
@@ -215,7 +215,7 @@ export function Footer() {
             <div className="pt-6 border-t border-foreground/10">
               <Link
                 to="/admin/login"
-                className="text-xs text-foreground/40 hover:text-primary transition-colors"
+                className="text-xs text-foreground/40 hover:text-primary transition-colors block"
               >
                 Administración
               </Link>

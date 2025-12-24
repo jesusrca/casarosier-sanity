@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useContent } from '../contexts/ContentContext';
-import { SEO, generateBlogPostStructuredData } from '../components/SEO';
+import { SEOHead } from '../components/SEOHead';
+import { generateBlogPostStructuredData } from '../components/SEO';
 import { Navigation } from '../components/Navigation';
+import { LoadingScreen } from '../components/LoadingScreen';
 import { Calendar, User, ArrowLeft, ChevronUp, Clock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
@@ -18,21 +20,28 @@ function calculateReadingTime(content: string): number {
 export function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
   const { getBlogPostBySlug, loading } = useContent();
+  const [showNotFound, setShowNotFound] = useState(false);
   const post = getBlogPostBySlug(slug || '');
 
-  // Si está cargando y no hay post, mostrar skeleton
-  if (loading && !post) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-foreground/60">Cargando artículo...</p>
-        </div>
-      </div>
-    );
+  // Control del delay antes de mostrar 404 para evitar flash durante transiciones
+  useEffect(() => {
+    if ((!post || !post.published) && !loading) {
+      // Dar un pequeño margen de tiempo antes de mostrar 404
+      const timer = setTimeout(() => {
+        setShowNotFound(true);
+      }, 300); // 300ms de delay, coincide con la duración de la transición
+      return () => clearTimeout(timer);
+    } else {
+      setShowNotFound(false);
+    }
+  }, [post, loading, slug]);
+
+  // Si está cargando o esperando para mostrar 404, mostrar skeleton
+  if (loading || ((!post || !post.published) && !showNotFound)) {
+    return <LoadingScreen />;
   }
 
-  if (!post || !post.published) {
+  if ((!post || !post.published) && showNotFound) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -60,7 +69,7 @@ export function BlogPost() {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEO
+      <SEOHead
         title={post.seo?.metaTitle || `${post.title} | Casa Rosier Blog`}
         description={post.seo?.metaDescription || post.excerpt}
         keywords={post.seo?.keywords || 'blog, cerámica, Casa Rosier'}

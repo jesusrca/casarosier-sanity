@@ -8,9 +8,10 @@ import { pagesAPI } from '../utils/api';
 import { useContent } from '../contexts/ContentContext';
 import logoImage from "figma:asset/28612bd890b3dcd85d8f93665d63bdc17b7bfea3.png";
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import { SEOHead } from '../components/SEOHead';
 
 export function Home() {
-  const { classes, workshops } = useContent(); // Usar el contexto de contenido
+  const { classes, workshops, settings } = useContent(); // Usar el contexto de contenido
   const [pageData, setPageData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [featuredCourses, setFeaturedCourses] = useState<any[]>([]);
@@ -150,6 +151,16 @@ export function Home() {
 
   return (
     <div className="min-h-screen">
+      {/* SEO Meta Tags */}
+      <SEOHead
+        title={settings.seoTitle || 'Casa Rosier - Taller de Cerámica en Barcelona'}
+        description={settings.seoDescription}
+        keywords={settings.seoKeywords}
+        image={settings.ogImage}
+        url={settings.ogUrl}
+        type={settings.ogType || 'website'}
+      />
+
       {/* Hero Section */}
       <HeroHome />
 
@@ -167,7 +178,7 @@ export function Home() {
               <img
                 src={aboutMainImage}
                 alt="Casa Rosier Cerámica"
-                className="w-full h-[298px] lg:h-[357px] object-cover lg:object-contain lg:object-right"
+                className="w-full h-[343px] lg:h-[411px] object-cover lg:object-contain lg:object-right"
               />
             </motion.div>
 

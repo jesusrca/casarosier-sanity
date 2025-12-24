@@ -102,9 +102,7 @@ export function ContentEditor({ item: initialItem, onSave, onCancel, onDelete }:
     // Auto-generar slug cuando se edita el título (solo si no se ha editado manualmente)
     if (field === 'title' && !slugManuallyEdited) {
       const baseSlug = slugify(value);
-      // Agregar prefijo según el tipo
-      const prefix = item.type === 'workshop' ? 'workshop/' : '';
-      setItem(prev => ({ ...prev, [field]: value, slug: prefix + baseSlug }));
+      setItem(prev => ({ ...prev, [field]: value, slug: baseSlug }));
     }
   };
 
@@ -123,6 +121,14 @@ export function ContentEditor({ item: initialItem, onSave, onCancel, onDelete }:
   };
 
   const removeFromArray = (field: string, index: number) => {
+    console.log('🗑️ Eliminando del array:', {
+      field,
+      index,
+      arrayLength: item[field]?.length,
+      itemToRemove: item[field]?.[index],
+      allItems: item[field]
+    });
+    
     setItem({
       ...item,
       [field]: item[field].filter((_: any, i: number) => i !== index),
@@ -225,7 +231,7 @@ export function ContentEditor({ item: initialItem, onSave, onCancel, onDelete }:
   const handlePreview = () => {
     // Construir la URL de vista previa
     const baseUrl = window.location.origin;
-    const type = item.type === 'class' ? 'clases' : item.type === 'workshop' ? 'workshops' : item.type === 'giftcard' ? 'tarjeta-regalo' : 'privadas';
+    const type = item.type === 'class' ? 'clases' : item.type === 'workshop' ? 'workshops' : item.type === 'gift-card' ? 'gift-card' : 'privada';
     const slug = item.slug || slugify(item.title);
     const previewUrl = `${baseUrl}/${type}/${slug}`;
     window.open(previewUrl, '_blank');
@@ -257,7 +263,7 @@ export function ContentEditor({ item: initialItem, onSave, onCancel, onDelete }:
       <div className="flex items-center justify-between mb-6 sm:mb-8">
         <div>
           <h1 className="text-2xl sm:text-3xl">
-            {item.id ? 'Editar' : 'Crear'} {item.type === 'class' ? 'Clase' : item.type === 'workshop' ? 'Workshop' : item.type === 'giftcard' ? 'Tarjeta de Regalo' : 'Privada'}
+            {item.id ? 'Editar' : 'Crear'} {item.type === 'class' ? 'Clase' : item.type === 'workshop' ? 'Workshop' : item.type === 'gift-card' ? 'Tarjeta de Regalo' : 'Privada'}
           </h1>
           {hasUnsavedChanges && (
             <p className="text-sm text-orange-600 mt-1 flex items-center gap-2">
@@ -371,7 +377,7 @@ export function ContentEditor({ item: initialItem, onSave, onCancel, onDelete }:
                         className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                       <p className="text-xs text-foreground/60 mt-1">
-                        Se usará en la URL: {item.type === 'class' ? '/clases/' : item.type === 'workshop' ? '/workshops/' : item.type === 'giftcard' ? '/tarjeta-regalo/' : '/privada/'}{item.slug || 'slug'}
+                        Se usará en la URL: {item.type === 'class' ? '/clases/' : item.type === 'workshop' ? '/workshops/' : item.type === 'gift-card' ? '/gift-card/' : '/privada/'}{item.slug || 'slug'}
                       </p>
                       <p className="text-xs text-primary/70 mt-1 italic">
                         💡 Si el slug ya existe, se agregará automáticamente un número al final
@@ -416,35 +422,22 @@ export function ContentEditor({ item: initialItem, onSave, onCancel, onDelete }:
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm mb-2">Precio principal (€)</label>
-                        <input
-                          type="number"
-                          value={item.price || ''}
-                          onChange={(e) => updateField('price', e.target.value ? parseFloat(e.target.value) : 0)}
-                          className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                        <p className="text-xs text-foreground/60 mt-1">Precio base que se mostrará destacado</p>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm mb-2">Duración</label>
-                        <input
-                          type="text"
-                          value={item.duration}
-                          onChange={(e) => updateField('duration', e.target.value)}
-                          placeholder="ej: 4 clases de 2 horas"
-                          className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-sm mb-2">Duración</label>
+                      <input
+                        type="text"
+                        value={item.duration}
+                        onChange={(e) => updateField('duration', e.target.value)}
+                        placeholder="ej: 4 clases de 2 horas"
+                        className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
                     </div>
 
                     {/* Opciones de precio adicionales */}
                     <div className="border border-foreground/20 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div>
-                          <h4 className="font-medium">Opciones de precio adicionales</h4>
+                          <h4 className="font-medium">Precios de la Clase</h4>
                           <p className="text-xs text-foreground/60 mt-1">
                             Agrega diferentes paquetes o modalidades de pago
                           </p>
@@ -554,9 +547,11 @@ export function ContentEditor({ item: initialItem, onSave, onCancel, onDelete }:
                         {(item.images || []).map((img: any, index: number) => {
                           // Support both old string format and new object format
                           const imageData = typeof img === 'string' ? { url: img, alt: '', caption: '' } : img;
+                          // Create a stable unique key combining url and index to prevent wrong deletions
+                          const uniqueKey = `${imageData.url || 'empty'}-${index}`;
                           
                           return (
-                            <div key={index} className="border border-gray-200 rounded-lg p-4">
+                            <div key={uniqueKey} className="border border-gray-200 rounded-lg p-4">
                               <div className="flex items-center justify-between mb-2">
                                 <span className="text-sm font-medium">Imagen {index + 1}</span>
                                 <button
@@ -875,13 +870,76 @@ export function ContentEditor({ item: initialItem, onSave, onCancel, onDelete }:
                         </div>
                       </div>
                       <label className="block text-xs mb-2 text-foreground/60">Información extra (opcional)</label>
-                      <textarea
-                        value={item.content?.additionalInfo || ''}
-                        onChange={(e) => updateNestedField('content', 'additionalInfo', e.target.value)}
-                        rows={3}
-                        placeholder="Añade información adicional si es necesaria..."
-                        className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                      />
+                      {item.type === 'gift-card' ? (
+                        // Bloques repetibles para tarjetas de regalo
+                        <div className="space-y-4">
+                          {(item.content?.infoBlocks || []).map((block: any, index: number) => (
+                            <div key={index} className="border-2 border-foreground/20 rounded-lg p-4 bg-foreground/5">
+                              <div className="flex justify-between items-start mb-3">
+                                <span className="text-sm font-medium">Bloque {index + 1}</span>
+                                <button
+                                  onClick={() => {
+                                    const blocks = [...(item.content?.infoBlocks || [])];
+                                    blocks.splice(index, 1);
+                                    updateNestedField('content', 'infoBlocks', blocks);
+                                  }}
+                                  className="text-red-600 hover:bg-red-50 p-1 rounded"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="block text-xs mb-1">Título del bloque</label>
+                                  <input
+                                    type="text"
+                                    value={block.title || ''}
+                                    onChange={(e) => {
+                                      const blocks = [...(item.content?.infoBlocks || [])];
+                                      blocks[index] = { ...blocks[index], title: e.target.value };
+                                      updateNestedField('content', 'infoBlocks', blocks);
+                                    }}
+                                    placeholder="Título del bloque"
+                                    className="w-full px-3 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs mb-1">Descripción</label>
+                                  <RichTextEditor
+                                    value={block.description || ''}
+                                    onChange={(value) => {
+                                      const blocks = [...(item.content?.infoBlocks || [])];
+                                      blocks[index] = { ...blocks[index], description: value };
+                                      updateNestedField('content', 'infoBlocks', blocks);
+                                    }}
+                                    placeholder="Descripción del bloque..."
+                                    height="150px"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          <button
+                            onClick={() => {
+                              const blocks = [...(item.content?.infoBlocks || []), { title: '', description: '' }];
+                              updateNestedField('content', 'infoBlocks', blocks);
+                            }}
+                            className="w-full py-3 border-2 border-dashed border-foreground/30 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-2 text-sm text-foreground/60 hover:text-primary"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Agregar bloque de información
+                          </button>
+                        </div>
+                      ) : (
+                        // Textarea simple para otros tipos de contenido
+                        <textarea
+                          value={item.content?.additionalInfo || ''}
+                          onChange={(e) => updateNestedField('content', 'additionalInfo', e.target.value)}
+                          rows={3}
+                          placeholder="Añade información adicional si es necesaria..."
+                          className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                        />
+                      )}
                       
                       {/* CTA Button Text (solo para privadas) */}
                       {item.type === 'private' && (
@@ -897,6 +955,26 @@ export function ContentEditor({ item: initialItem, onSave, onCancel, onDelete }:
                           <p className="text-xs text-foreground/50 mt-1 italic">
                             Este botón aparece al final de la sección de descripción
                           </p>
+                        </div>
+                      )}
+
+                      {/* Mostrar botón inferior de Inscribirse (para clases y workshops) */}
+                      {(item.type === 'class' || item.type === 'workshop') && (
+                        <div className="mt-4 border-t border-foreground/10 pt-4">
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={item.content?.showBottomCTA !== false}
+                              onChange={(e) => updateNestedField('content', 'showBottomCTA', e.target.checked)}
+                              className="w-5 h-5 rounded border-foreground/20 text-primary focus:ring-primary"
+                            />
+                            <div>
+                              <span className="text-sm font-medium">Mostrar botón "Inscribirse" al final del contenido</span>
+                              <p className="text-xs text-foreground/50 mt-1">
+                                Este botón aparece después de la sección de contenido (módulos, actividades, etc.)
+                              </p>
+                            </div>
+                          </label>
                         </div>
                       )}
                     </div>
@@ -1179,22 +1257,24 @@ export function ContentEditor({ item: initialItem, onSave, onCancel, onDelete }:
 
           {/* Columna Menú (1/3 del ancho) */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Tipo de Contenido */}
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-6">
-              <h3 className="text-xl mb-2">Tipo de Contenido</h3>
-              <p className="text-sm text-foreground/60 mb-4">
-                Selecciona el tipo de contenido para esta página
-              </p>
-              <select
-                value={item.type}
-                onChange={(e) => updateField('type', e.target.value)}
-                className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="class">Clase</option>
-                <option value="workshop">Workshop</option>
-                <option value="private">Privada</option>
-              </select>
-            </div>
+            {/* Tipo de Contenido - Solo mostrar si NO es gift-card */}
+            {item.type !== 'gift-card' && (
+              <div className="bg-white rounded-lg shadow-md p-6 sticky top-6">
+                <h3 className="text-xl mb-2">Tipo de Contenido</h3>
+                <p className="text-sm text-foreground/60 mb-4">
+                  Selecciona el tipo de contenido para esta página
+                </p>
+                <select
+                  value={item.type}
+                  onChange={(e) => updateField('type', e.target.value)}
+                  className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="class">Clase</option>
+                  <option value="workshop">Workshop</option>
+                  <option value="private">Privada</option>
+                </select>
+              </div>
+            )}
 
             {/* Ubicación en el Menú */}
             <div className="bg-white rounded-lg shadow-md p-6">

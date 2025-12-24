@@ -15,7 +15,9 @@ import {
   Users,
   Mail,
   Image,
-  RefreshCw
+  RefreshCw,
+  Gift,
+  ArrowRightLeft
 } from 'lucide-react';
 import { ContentManager } from './ContentManager';
 import { BlogManager } from './BlogManager';
@@ -26,6 +28,8 @@ import { UserManager } from './UserManager';
 import { MessagesManager } from './MessagesManager';
 import { ImageLibrary } from './ImageLibrary';
 import { Dashboard } from './Dashboard';
+import { GiftCardManager } from './GiftCardManager';
+import { RedirectsManager } from './RedirectsManager';
 
 export function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -127,6 +131,8 @@ export function AdminDashboard() {
     { path: '/admin/dashboard/users', icon: Users, label: 'Usuarios', roles: ['super_admin'] },
     { path: '/admin/dashboard/settings', icon: Settings, label: 'Ajustes', roles: ['super_admin'] },
     { path: '/admin/dashboard/images', icon: Image, label: 'Imágenes', roles: ['super_admin'] },
+    { path: '/admin/dashboard/giftcards', icon: Gift, label: 'Tarjetas Regalo', roles: ['super_admin'] },
+    { path: '/admin/dashboard/redirects', icon: ArrowRightLeft, label: 'Redirecciones', roles: ['super_admin'] },
   ];
 
   // Filtrar items del menú según el rol del usuario
@@ -254,6 +260,8 @@ export function AdminDashboard() {
             <Route path="/users" element={<UserManager />} />
             <Route path="/messages" element={<MessagesManager />} />
             <Route path="/images" element={<ImageLibrary />} />
+            <Route path="/giftcards" element={<GiftCardManager />} />
+            <Route path="/redirects" element={<RedirectsManager />} />
           </Routes>
         </main>
       </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { menuAPI, contentAPI, pagesAPI } from '../../utils/api';
-import { Plus, Trash2, GripVertical, Save, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Save, ChevronDown, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AutocompleteInput } from '../../components/AutocompleteInput';
 import { NavigationBlocker } from '../../components/NavigationBlocker';
@@ -302,14 +302,14 @@ export function MenuManager() {
                     disabled={index === 0}
                     className="text-gray-400 hover:text-gray-600 disabled:opacity-30"
                   >
-                    <GripVertical size={16} />
+                    <ArrowUp size={16} />
                   </button>
                   <button
                     onClick={() => moveItem(index, 'down')}
                     disabled={index === menuItems.length - 1}
                     className="text-gray-400 hover:text-gray-600 disabled:opacity-30"
                   >
-                    <GripVertical size={16} className="rotate-180" />
+                    <ArrowDown size={16} />
                   </button>
                 </div>
 
@@ -388,14 +388,14 @@ export function MenuManager() {
                               disabled={subIndex === 0}
                               className="text-gray-400 hover:text-gray-600 disabled:opacity-30"
                             >
-                              <GripVertical size={14} />
+                              <ArrowUp size={14} />
                             </button>
                             <button
                               onClick={() => moveSubmenuItem(index, subIndex, 'down')}
                               disabled={subIndex === item.submenu!.length - 1}
                               className="text-gray-400 hover:text-gray-600 disabled:opacity-30"
                             >
-                              <GripVertical size={14} className="rotate-180" />
+                              <ArrowDown size={14} />
                             </button>
                           </div>
 

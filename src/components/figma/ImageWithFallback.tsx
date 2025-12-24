@@ -16,13 +16,13 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
     setIsLoading(false)
   }
 
-  const { src, alt, style, className, ...rest } = props
+  const { src, alt, style, className, loading = 'lazy', ...rest } = props
 
   // Si no hay src o está vacío, mostrar solo el placeholder
   if (!src || src.trim() === '') {
     return (
       <div
-        className={`bg-[#F3F2EF] animate-pulse ${className ?? ''}`}
+        className={`bg-[#F3F2EF] ${className ?? ''}`}
         style={style}
       >
         <div className="flex items-center justify-center w-full h-full">
@@ -33,7 +33,7 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
   }
 
   return (
-    <div className="relative inline-block" style={style}>
+    <div className="relative inline-block w-full" style={style}>
       {/* Placeholder mientras carga */}
       {isLoading && !didError && (
         <div
@@ -53,10 +53,12 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
           </div>
         </div>
       ) : (
-        /* Imagen real */
+        /* Imagen real con lazy loading */
         <img 
           src={src} 
           alt={alt} 
+          loading={loading}
+          decoding="async"
           className={`${className ?? ''} ${isLoading ? 'opacity-0' : 'opacity-100 transition-opacity duration-300'}`}
           style={style} 
           {...rest} 

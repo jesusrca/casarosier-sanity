@@ -1,6 +1,7 @@
 import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
+import { compress } from "npm:hono/compress";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import * as kv from "./kv_store.tsx";
 import { seedClasses, seedWorkshops } from "./seed-data.tsx";
@@ -51,6 +52,9 @@ initializeStorage().catch(() => {
 // Enable logger
 app.use('*', logger(console.log));
 
+// Enable compression (gzip) for faster responses
+app.use('*', compress());
+
 // Enable CORS for all routes and methods
 app.use(
   "/*",
@@ -79,7 +83,7 @@ async function verifyAuth(c: any, next: any) {
 
   c.set('userId', user.id);
   c.set('userEmail', user.email);
-  await next();
+  return await next();
 }
 
 // Middleware to verify super admin role
@@ -135,7 +139,7 @@ async function verifySuperAdmin(c: any, next: any) {
     return c.json({ error: 'Forbidden: Super admin access required' }, 403);
   }
 
-  await next();
+  return await next();
 }
 
 // Health check endpoint
@@ -500,7 +504,10 @@ app.post("/make-server-0ba58e95/content/items", verifyAuth, async (c) => {
     if (item.slug) {
       const allItems = await kv.getByPrefix('content:');
       const existingSlugs = allItems
-        .filter((existingItem: any) => existingItem.id !== item.id) // Excluir el item actual si está actualizando
+        .filter((existingItem: any) => 
+          existingItem.id !== item.id && // Excluir el item actual si está actualizando
+          existingItem.type === item.type // IMPORTANTE: Solo comparar con el mismo tipo
+        )
         .map((existingItem: any) => existingItem.slug)
         .filter(Boolean);
       
@@ -594,7 +601,10 @@ app.put("/make-server-0ba58e95/content/items/:id", verifyAuth, async (c) => {
     if (item.slug && item.slug !== oldItem?.slug) {
       const allItems = await kv.getByPrefix('content:');
       const existingSlugs = allItems
-        .filter((existingItem: any) => existingItem.id !== id) // Excluir el item actual
+        .filter((existingItem: any) => 
+          existingItem.id !== id && // Excluir el item actual
+          existingItem.type === item.type // IMPORTANTE: Solo comparar con el mismo tipo
+        )
         .map((existingItem: any) => existingItem.slug)
         .filter(Boolean);
       
@@ -2128,41 +2138,128 @@ app.post("/make-server-0ba58e95/history/:itemId/restore/:versionId", verifyAuth,
 // Limpiar versiones antiguas (mayores a 30 días)
 async function cleanupOldVersions() {
   try {
-    const allKeys = await kv.getByPrefix('history:');
+    console.log('🧹 Starting cleanup of old versions...');
+    
+    // Usar un timeout más corto para evitar bloqueos
+    const timeoutMs = 5000; // 5 segundos máximo
+    const startTime = Date.now();
+    
+    // Limitamos a limpiar máximo 20 versiones por ejecución para evitar timeouts
+    const MAX_CLEANUP_PER_RUN = 20;
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
     let deletedCount = 0;
+    let processedCount = 0;
     
-    for (const item of allKeys) {
+    // Intentar obtener versiones con un timeout
+    let allKeys: any[] = [];
+    try {
+      // Crear una promesa con timeout
+      const fetchPromise = kv.getByPrefix('history:');
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), timeoutMs)
+      );
+      
+      allKeys = await Promise.race([fetchPromise, timeoutPromise]) as any[];
+    } catch (error: any) {
+      if (error.message === 'Timeout') {
+        console.log('⚠️ Cleanup timeout - skipping this run to avoid blocking');
+        return;
+      }
+      throw error;
+    }
+    
+    // Si hay demasiadas claves, solo procesamos las primeras 50
+    const keysToProcess = allKeys.slice(0, 50);
+    
+    for (const item of keysToProcess) {
+      // Verificar timeout durante el procesamiento
+      if (Date.now() - startTime > timeoutMs) {
+        console.log(`⚠️ Cleanup taking too long, stopping early`);
+        break;
+      }
+      
+      processedCount++;
+      
+      // Detener si ya alcanzamos el límite de limpieza
+      if (deletedCount >= MAX_CLEANUP_PER_RUN) {
+        console.log(`🛑 Reached cleanup limit of ${MAX_CLEANUP_PER_RUN} items, stopping for now`);
+        break;
+      }
+      
       if (item.savedAt && new Date(item.savedAt) < thirtyDaysAgo) {
-        // Extraer la clave completa del item
-        const matches = allKeys.filter((k: any) => 
-          k.versionId === item.versionId && k.savedAt === item.savedAt
-        );
-        
-        if (matches.length > 0) {
-          // Construir la clave para eliminar
+        try {
           const itemId = item.id;
           const versionId = item.versionId;
           await kv.del(`history:${itemId}:${versionId}`);
           deletedCount++;
+        } catch (delError) {
+          console.error(`Error deleting version ${item.versionId}:`, delError);
         }
       }
     }
     
     if (deletedCount > 0) {
-      console.log(`🧹 Cleaned up ${deletedCount} old versions`);
+      console.log(`✅ Cleaned up ${deletedCount} old versions (processed ${processedCount} items)`);
+    } else {
+      console.log(`✅ No old versions to clean (processed ${processedCount} items)`);
     }
   } catch (error) {
     console.error('Error cleaning up old versions:', error);
+    // No lanzar el error para evitar que afecte el servidor
   }
 }
 
-// Ejecutar limpieza cada 24 horas
-setInterval(cleanupOldVersions, 24 * 60 * 60 * 1000);
+// Handler para errores globales
+app.onError((err, c) => {
+  console.error('Global error handler:', err);
+  return c.json(
+    { 
+      error: 'Internal server error',
+      message: err.message || String(err)
+    },
+    500
+  );
+});
 
-// Ejecutar limpieza inicial después de 1 minuto
-setTimeout(cleanupOldVersions, 60 * 1000);
+// Handler para rutas no encontradas
+app.notFound((c) => {
+  console.log(`404 - Route not found: ${c.req.method} ${c.req.url}`);
+  return c.json(
+    { 
+      error: 'Not found',
+      path: c.req.url,
+      message: 'The requested resource was not found'
+    },
+    404
+  );
+});
 
-Deno.serve(app.fetch);
+// Ejecutar limpieza cada 7 días (en lugar de 24 horas) para reducir carga
+setInterval(cleanupOldVersions, 7 * 24 * 60 * 60 * 1000);
+
+// Ejecutar limpieza inicial después de 5 minutos (en lugar de 1 minuto)
+setTimeout(cleanupOldVersions, 5 * 60 * 1000);
+
+// Envolver app.fetch para manejar errores correctamente
+Deno.serve(async (req) => {
+  try {
+    return await app.fetch(req);
+  } catch (error) {
+    console.error('Unhandled error in request handler:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : String(error)
+      }), 
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        }
+      }
+    );
+  }
+});

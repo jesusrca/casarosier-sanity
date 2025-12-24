@@ -33,11 +33,37 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escribe aquí..
     const temp = document.createElement('div');
     temp.innerHTML = html;
     
-    // Remover elementos vacíos innecesarios
-    const removeEmptyElements = (element: HTMLElement) => {
+    // Limpiar atributos no deseados y elementos vacíos
+    const cleanElement = (element: HTMLElement) => {
       const children = Array.from(element.children);
       children.forEach((child) => {
         if (child instanceof HTMLElement) {
+          // Remover atributos data-* no deseados
+          Array.from(child.attributes).forEach(attr => {
+            if (attr.name.startsWith('data-')) {
+              child.removeAttribute(attr.name);
+            }
+          });
+          
+          // NO remover listas ni sus elementos
+          if (child.tagName === 'UL' || child.tagName === 'OL') {
+            // Preservar listas, solo limpiar sus hijos
+            cleanElement(child);
+            return;
+          }
+          
+          if (child.tagName === 'LI') {
+            // Preservar elementos de lista
+            cleanElement(child);
+            return;
+          }
+          
+          // Remover párrafos vacíos o solo con espacios
+          if (child.tagName === 'P' && (!child.textContent?.trim() || child.innerHTML === '<br>')) {
+            child.remove();
+            return;
+          }
+          
           // Remover divs vacíos
           if (child.tagName === 'DIV' && !child.textContent?.trim()) {
             child.remove();
@@ -55,14 +81,24 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escribe aquí..
           }
           
           // Recursivo
-          removeEmptyElements(child);
+          cleanElement(child);
         }
       });
     };
     
-    removeEmptyElements(temp);
+    cleanElement(temp);
     
-    return temp.innerHTML;
+    // Limpiar el HTML resultante
+    let cleanedHtml = temp.innerHTML;
+    
+    // Eliminar párrafos vacíos que queden
+    cleanedHtml = cleanedHtml.replace(/<p[^>]*>\s*<\/p>/gi, '');
+    cleanedHtml = cleanedHtml.replace(/<p[^>]*><br><\/p>/gi, '');
+    
+    // Eliminar múltiples <br> consecutivos
+    cleanedHtml = cleanedHtml.replace(/(<br\s*\/?>){2,}/gi, '<br>');
+    
+    return cleanedHtml;
   };
 
   const handleInput = () => {
@@ -73,14 +109,34 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escribe aquí..
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Al presionar Enter, crear un nuevo párrafo limpio
+    // Detectar si estamos dentro de una lista
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return;
+    
+    const range = selection.getRangeAt(0);
+    let node = range.startContainer;
+    
+    // Verificar si estamos dentro de un LI
+    let isInList = false;
+    let currentNode: Node | null = node;
+    while (currentNode && currentNode !== editorRef.current) {
+      if (currentNode.nodeName === 'LI' || currentNode.nodeName === 'UL' || currentNode.nodeName === 'OL') {
+        isInList = true;
+        break;
+      }
+      currentNode = currentNode.parentNode;
+    }
+    
+    // Si estamos en una lista, dejar que el navegador maneje el Enter
+    if (isInList) {
+      // No prevenir default, dejar que funcione naturalmente
+      setTimeout(() => handleInput(), 10);
+      return;
+    }
+    
+    // Al presionar Enter fuera de listas, crear un nuevo párrafo limpio
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      
-      const selection = window.getSelection();
-      if (!selection || !selection.rangeCount) return;
-      
-      const range = selection.getRangeAt(0);
       
       // Crear un nuevo párrafo
       const p = document.createElement('p');
@@ -103,9 +159,22 @@ export function RichTextEditor({ value, onChange, placeholder = 'Escribe aquí..
   };
 
   const execCommand = (command: string, value: string | undefined = undefined) => {
+    // Para comandos de lista, no normalizar inmediatamente
+    const isListCommand = command === 'insertUnorderedList' || command === 'insertOrderedList';
+    
     document.execCommand(command, false, value);
     editorRef.current?.focus();
-    setTimeout(() => handleInput(), 10);
+    
+    if (isListCommand) {
+      // Para listas, solo actualizar el contenido sin normalizar
+      setTimeout(() => {
+        if (editorRef.current) {
+          onChange(editorRef.current.innerHTML);
+        }
+      }, 10);
+    } else {
+      setTimeout(() => handleInput(), 10);
+    }
   };
 
   const formatBlock = (tag: string) => {

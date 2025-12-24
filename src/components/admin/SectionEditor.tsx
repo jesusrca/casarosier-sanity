@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { Trash2, ChevronUp, ChevronDown, Plus, Minus } from 'lucide-react';
 import { ImageUploader } from '../ImageUploader';
+import { useContent } from '../../contexts/ContentContext';
 
 interface SectionEditorProps {
   section: any;
@@ -21,6 +22,9 @@ export function SectionEditor({
   canMoveUp,
   canMoveDown,
 }: SectionEditorProps) {
+  // Cargar las tarjetas de regalo desde el contexto
+  const { giftCards } = useContent();
+
   const updateField = (field: string, value: any) => {
     onChange({ ...section, [field]: value });
   };
@@ -741,8 +745,11 @@ export function SectionEditor({
 
                   {/* CTA Opcional */}
                   <div className="border-t border-foreground/20 pt-3 mt-3">
-                    <label className="block text-xs mb-1 text-foreground/60">Botón de Acción (opcional)</label>
-                    <div className="mb-2">
+                    <label className="block text-xs mb-2 text-foreground/60">Botón de Acción (opcional)</label>
+                    
+                    {/* Texto del botón */}
+                    <div className="mb-3">
+                      <label className="block text-xs mb-1">Texto del botón</label>
                       <input
                         type="text"
                         value={card.ctaText || ''}
@@ -751,15 +758,62 @@ export function SectionEditor({
                         className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                       />
                     </div>
-                    <div>
-                      <input
-                        type="text"
-                        value={card.ctaLink || ''}
-                        onChange={(e) => updateArrayItem('giftCards', index, { ...card, ctaLink: e.target.value })}
-                        placeholder="https://..."
-                        className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                      />
+
+                    {/* Tipo de enlace */}
+                    <div className="mb-3">
+                      <label className="block text-xs mb-1">Tipo de enlace</label>
+                      <select
+                        value={card.ctaLinkType || 'url'}
+                        onChange={(e) => updateArrayItem('giftCards', index, { ...card, ctaLinkType: e.target.value, ctaLink: '' })}
+                        className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-white"
+                      >
+                        <option value="url">URL externa</option>
+                        <option value="gift-card">Página de tarjeta de regalo</option>
+                      </select>
                     </div>
+
+                    {/* Campo según el tipo seleccionado */}
+                    {card.ctaLinkType === 'gift-card' ? (
+                      <div>
+                        <label className="block text-xs mb-1">Seleccionar tarjeta de regalo</label>
+                        <select
+                          value={card.ctaLink || ''}
+                          onChange={(e) => updateArrayItem('giftCards', index, { ...card, ctaLink: e.target.value })}
+                          className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-white"
+                        >
+                          <option value="">-- Seleccionar tarjeta --</option>
+                          {/* Cargar tarjetas de regalo desde el contexto */}
+                          {giftCards && giftCards.length > 0 ? (
+                            giftCards
+                              .filter((gc: any) => gc.visible) // Solo mostrar tarjetas visibles
+                              .map((giftCard: any) => (
+                                <option key={giftCard.id} value={`/tarjeta-regalo/${giftCard.slug}`}>
+                                  {giftCard.title}
+                                </option>
+                              ))
+                          ) : (
+                            <option value="" disabled>No hay tarjetas de regalo creadas</option>
+                          )}
+                        </select>
+                        <p className="text-xs text-foreground/50 mt-1">
+                          💡 Las tarjetas se cargan del gestor de Gift Cards (solo visibles)
+                        </p>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-xs mb-1">URL del enlace</label>
+                        <input
+                          type="text"
+                          value={card.ctaLink || ''}
+                          onChange={(e) => updateArrayItem('giftCards', index, { ...card, ctaLink: e.target.value })}
+                          placeholder="https://ejemplo.com o /ruta-interna"
+                          className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                        />
+                        <p className="text-xs text-foreground/50 mt-1">
+                          💡 Usa URL completa (https://) o ruta interna (/pagina)
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

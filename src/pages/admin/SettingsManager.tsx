@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { settingsAPI, uploadAPI } from '../../utils/api';
-import { Save, AlertCircle, CheckCircle, Upload, X, Plus, Trash2, RefreshCw, Image as ImageIcon } from 'lucide-react';
+import { settingsAPI, uploadAPI, contentAPI } from '../../utils/api';
+import { Save, AlertCircle, CheckCircle, Upload, X, Plus, Trash2, RefreshCw, Image as ImageIcon, ArrowUp, ArrowDown } from 'lucide-react';
 import { ImageUploader } from '../../components/ImageUploader';
 import { InstagramImageManager } from '../../components/InstagramImageManager';
 import { NavigationBlocker } from '../../components/NavigationBlocker';
+import { useContent } from '../../contexts/ContentContext';
 
 export function SettingsManager() {
+  const { classes, workshops, refreshContent } = useContent();
   const [settings, setSettings] = useState<any>({});
   const [initialSettingsSnapshot, setInitialSettingsSnapshot] = useState<string>('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -14,6 +16,12 @@ export function SettingsManager() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [uploadingInstagram, setUploadingInstagram] = useState(false);
+  
+  // Estado local para el orden de items destacados
+  const [featuredOrder, setFeaturedOrder] = useState<{
+    courses: string[];
+    workshops: string[];
+  }>({ courses: [], workshops: [] });
 
   // Detectar cambios no guardados
   useEffect(() => {
@@ -43,6 +51,19 @@ export function SettingsManager() {
     loadSettings();
   }, []);
 
+  // Inicializar el orden de items destacados cuando se carga el contenido
+  useEffect(() => {
+    if (classes.length > 0 || workshops.length > 0) {
+      const courses = getFeaturedCourses();
+      const workshopsItems = getFeaturedWorkshops();
+      
+      setFeaturedOrder({
+        courses: courses.map((item: any) => item.id),
+        workshops: workshopsItems.map((item: any) => item.id)
+      });
+    }
+  }, [classes, workshops]);
+
   const loadSettings = async () => {
     try {
       const response = await settingsAPI.getSettings();
@@ -60,9 +81,40 @@ export function SettingsManager() {
     setMessage(null);
 
     try {
+      // Guardar configuración
       await settingsAPI.saveSettings(settings);
+      
+      // Guardar el orden de items destacados si ha cambiado
+      const allItems = [...classes, ...workshops];
+      
+      // Actualizar orden de courses
+      for (let i = 0; i < featuredOrder.courses.length; i++) {
+        const itemId = featuredOrder.courses[i];
+        const item = allItems.find((it: any) => it.id === itemId);
+        if (item && item.homeOrder !== i) {
+          await contentAPI.updateItem(itemId, {
+            ...item,
+            homeOrder: i
+          });
+        }
+      }
+      
+      // Actualizar orden de workshops
+      for (let i = 0; i < featuredOrder.workshops.length; i++) {
+        const itemId = featuredOrder.workshops[i];
+        const item = allItems.find((it: any) => it.id === itemId);
+        if (item && item.homeOrder !== i) {
+          await contentAPI.updateItem(itemId, {
+            ...item,
+            homeOrder: i
+          });
+        }
+      }
+      
       setMessage({ type: 'success', text: 'Configuración guardada correctamente' });
       setInitialSettingsSnapshot(JSON.stringify(settings));
+      await refreshContent();
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error('Error saving settings:', error);
       setMessage({ type: 'error', text: 'Error al guardar la configuración' });
@@ -200,6 +252,60 @@ export function SettingsManager() {
     };
     updateField('instagramImages', updatedImages);
     setMessage({ type: 'success', text: 'Imagen seleccionada desde la galería. No olvides guardar los cambios.' });
+  };
+
+  // Gestión de Clases y Workshops destacados en Home
+  const getFeaturedCourses = () => {
+    const allItems = [...classes, ...workshops];
+    const featured = allItems.filter((item: any) => item.showInHome === true && item.visible === true);
+    
+    // Si tenemos un orden personalizado en el estado, usarlo
+    if (featuredOrder.courses.length > 0) {
+      return featuredOrder.courses
+        .map(id => featured.find((item: any) => item.id === id))
+        .filter(Boolean); // Eliminar items que ya no existen
+    }
+    
+    // Si no, usar el orden del backend
+    return featured.sort((a: any, b: any) => (a.homeOrder || 0) - (b.homeOrder || 0));
+  };
+
+  const getFeaturedWorkshops = () => {
+    const allItems = [...classes, ...workshops];
+    const featured = allItems.filter((item: any) => item.showInHomeWorkshops === true && item.visible === true);
+    
+    // Si tenemos un orden personalizado en el estado, usarlo
+    if (featuredOrder.workshops.length > 0) {
+      return featuredOrder.workshops
+        .map(id => featured.find((item: any) => item.id === id))
+        .filter(Boolean); // Eliminar items que ya no existen
+    }
+    
+    // Si no, usar el orden del backend
+    return featured.sort((a: any, b: any) => (a.homeOrder || 0) - (b.homeOrder || 0));
+  };
+
+  const moveFeaturedItem = (itemId: string, direction: 'up' | 'down', section: 'courses' | 'workshops') => {
+    const currentOrder = section === 'courses' ? [...featuredOrder.courses] : [...featuredOrder.workshops];
+    const index = currentOrder.indexOf(itemId);
+    
+    if (index === -1) return;
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === currentOrder.length - 1) return;
+
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    // Intercambiar posiciones en el array
+    [currentOrder[index], currentOrder[targetIndex]] = [currentOrder[targetIndex], currentOrder[index]];
+    
+    // Actualizar el estado local
+    setFeaturedOrder({
+      ...featuredOrder,
+      [section]: currentOrder
+    });
+    
+    // Marcar como cambio sin guardar
+    setHasUnsavedChanges(true);
   };
 
   if (loading) {
@@ -381,6 +487,34 @@ export function SettingsManager() {
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-xl mb-4">Imagen Hero de la Página Clases</h3>
+          <p className="text-sm text-foreground/60 mb-4">
+            Imagen de título que se mostrará en la cabecera de la página de Clases
+          </p>
+          
+          <div className="space-y-6">
+            <ImageUploader
+              currentImage={typeof settings.clasesHeroTitleImage === 'string' ? settings.clasesHeroTitleImage : settings.clasesHeroTitleImage?.url || ''}
+              onImageSelect={(data) => {
+                if (typeof data === 'string') {
+                  updateField('clasesHeroTitleImage', { url: data, alt: '', description: '' });
+                } else {
+                  updateField('clasesHeroTitleImage', data);
+                }
+              }}
+              label="Imagen de Título del Hero de Clases (recomendado: PNG transparente)"
+              withMetadata={true}
+              initialAlt={typeof settings.clasesHeroTitleImage === 'object' ? settings.clasesHeroTitleImage?.alt || '' : ''}
+              initialDescription={typeof settings.clasesHeroTitleImage === 'object' ? settings.clasesHeroTitleImage?.description || '' : ''}
+            />
+            
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+              <strong>💡 Imagen de Título:</strong> Si subes una imagen, esta reemplazará el texto "Clases" en el hero. Si no se sube, se mostrará el texto normal.
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6">
           <h3 className="text-xl mb-4">SEO Global</h3>
           
           <div className="space-y-4">
@@ -421,11 +555,96 @@ export function SettingsManager() {
               />
             </div>
 
+            <div>
+              <label className="block text-sm mb-2">ID de Google Analytics</label>
+              <input
+                type="text"
+                value={settings.googleAnalyticsId || ''}
+                onChange={(e) => updateField('googleAnalyticsId', e.target.value)}
+                placeholder="G-XXXXXXXXXX o UA-XXXXXXXXX-X"
+                className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <p className="text-xs text-foreground/60 mt-1">
+                Introduce tu ID de Google Analytics (formato: G-XXXXXXXXXX para GA4 o UA-XXXXXXXXX-X para Universal Analytics)
+              </p>
+            </div>
+
             <ImageUploader
               currentImage={settings.ogImage || ''}
               onImageSelect={(url) => updateField('ogImage', url)}
               label="Imagen Open Graph por Defecto (se muestra al compartir en redes sociales)"
             />
+
+            {/* Open Graph Meta Tags */}
+            <div className="border-t border-foreground/10 pt-4 mt-6">
+              <h4 className="font-medium mb-3 flex items-center gap-2">
+                🌐 Open Graph (Redes Sociales)
+              </h4>
+              <p className="text-xs text-foreground/60 mb-4">
+                Controla cómo se ve tu sitio cuando se comparte en Facebook, Twitter, LinkedIn, etc.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm mb-2">og:url - URL del Sitio Web</label>
+                  <input
+                    type="url"
+                    value={settings.ogUrl || ''}
+                    onChange={(e) => updateField('ogUrl', e.target.value)}
+                    placeholder="https://casarosier.com"
+                    className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="text-xs text-foreground/60 mt-1">
+                    La URL principal de tu sitio web
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-2">og:type - Tipo de Contenido</label>
+                  <select
+                    value={settings.ogType || 'website'}
+                    onChange={(e) => updateField('ogType', e.target.value)}
+                    className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="website">website - Sitio Web General</option>
+                    <option value="article">article - Artículo/Blog</option>
+                    <option value="business.business">business.business - Negocio</option>
+                    <option value="profile">profile - Perfil</option>
+                  </select>
+                  <p className="text-xs text-foreground/60 mt-1">
+                    Define el tipo de contenido para redes sociales
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-2">og:title - Título para Redes Sociales</label>
+                  <input
+                    type="text"
+                    value={settings.ogTitle || ''}
+                    onChange={(e) => updateField('ogTitle', e.target.value)}
+                    placeholder="Casa Rosier - Taller de Cerámica en Barcelona"
+                    className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="text-xs text-foreground/60 mt-1">
+                    Si está vacío, usará el Meta Título por Defecto
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-2">og:description - Descripción para Redes Sociales</label>
+                  <textarea
+                    value={settings.ogDescription || ''}
+                    onChange={(e) => updateField('ogDescription', e.target.value)}
+                    placeholder="Descubre la cerámica con nuestras clases y workshops en Barcelona"
+                    rows={3}
+                    className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="text-xs text-foreground/60 mt-1">
+                    Si está vacío, usará la Meta Descripción por Defecto
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -503,6 +722,120 @@ export function SettingsManager() {
               </motion.button>
             </div>
           </div>
+        </div>
+
+        {/* Clases y Workshops destacados en Home */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-xl mb-4">Clases Destacadas en Home (Sección 1)</h3>
+          <p className="text-sm text-foreground/60 mb-4">
+            Orden de las clases que aparecen en la primera sección del home. Para agregar o quitar clases, edítalas desde el Gestor de Contenido.
+          </p>
+          
+          {/* Debug Info */}
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs space-y-1">
+            <div><strong>Debug:</strong></div>
+            <div>Total clases: {classes.length}</div>
+            <div>Total workshops: {workshops.length}</div>
+            <div>Clases con showInHome=true: {[...classes, ...workshops].filter((item: any) => item.showInHome === true).length}</div>
+            <div>Clases con showInHome=true Y visible=true: {[...classes, ...workshops].filter((item: any) => item.showInHome === true && item.visible === true).length}</div>
+            <div>featuredOrder.courses: {JSON.stringify(featuredOrder.courses)}</div>
+            <div>Items devueltos por getFeaturedCourses(): {getFeaturedCourses().length}</div>
+          </div>
+          
+          {getFeaturedCourses().length > 0 ? (
+            <div className="space-y-2">
+              {getFeaturedCourses().map((item: any, index: number) => (
+                <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex flex-col gap-1">
+                    <button
+                      onClick={() => moveFeaturedItem(item.id, 'up', 'courses')}
+                      disabled={index === 0}
+                      className="text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors"
+                      title="Mover arriba"
+                    >
+                      <ArrowUp size={16} />
+                    </button>
+                    <button
+                      onClick={() => moveFeaturedItem(item.id, 'down', 'courses')}
+                      disabled={index === getFeaturedCourses().length - 1}
+                      className="text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors"
+                      title="Mover abajo"
+                    >
+                      <ArrowDown size={16} />
+                    </button>
+                  </div>
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{item.title}</span>
+                      <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                        {item.type === 'class' ? 'Clase' : 'Workshop'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-foreground/60">
+                    Posición {index + 1}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-sm text-foreground/60 bg-gray-50 rounded-lg p-4 text-center">
+              No hay clases destacadas. Edita una clase o workshop y activa "Mostrar en sección 1 del Home".
+            </div>
+          )}
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-xl mb-4">Workshops Destacados en Home (Sección 2)</h3>
+          <p className="text-sm text-foreground/60 mb-4">
+            Orden de los workshops que aparecen en la segunda sección del home. Para agregar o quitar workshops, edítalos desde el Gestor de Contenido.
+          </p>
+          
+          {getFeaturedWorkshops().length > 0 ? (
+            <div className="space-y-2">
+              {getFeaturedWorkshops().map((item: any, index: number) => (
+                <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex flex-col gap-1">
+                    <button
+                      onClick={() => moveFeaturedItem(item.id, 'up', 'workshops')}
+                      disabled={index === 0}
+                      className="text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors"
+                      title="Mover arriba"
+                    >
+                      <ArrowUp size={16} />
+                    </button>
+                    <button
+                      onClick={() => moveFeaturedItem(item.id, 'down', 'workshops')}
+                      disabled={index === getFeaturedWorkshops().length - 1}
+                      className="text-gray-400 hover:text-gray-600 disabled:opacity-30 transition-colors"
+                      title="Mover abajo"
+                    >
+                      <ArrowDown size={16} />
+                    </button>
+                  </div>
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{item.title}</span>
+                      <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                        {item.type === 'class' ? 'Clase' : 'Workshop'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-foreground/60">
+                    Posición {index + 1}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-sm text-foreground/60 bg-gray-50 rounded-lg p-4 text-center">
+              No hay workshops destacados. Edita una clase o workshop y activa "Mostrar en sección 2 del Home".
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6">

@@ -1,9 +1,10 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { contentAPI, blogAPI, menuAPI, settingsAPI, pagesAPI } from '../utils/api';
+import { LoadingScreen } from '../components/LoadingScreen';
 
 interface ContentItem {
   id: string;
-  type: 'class' | 'workshop' | 'private';
+  type: 'class' | 'workshop' | 'private' | 'gift-card';
   title: string;
   slug: string;
   subtitle?: string;
@@ -69,6 +70,7 @@ interface ContentContextType {
   classes: ContentItem[];
   workshops: ContentItem[];
   privates: ContentItem[];
+  giftCards: ContentItem[];
   blogPosts: BlogPost[];
   menuItems: MenuItem[];
   pages: Page[];
@@ -82,6 +84,7 @@ interface ContentContextType {
   getClassBySlug: (slug: string) => ContentItem | undefined;
   getWorkshopBySlug: (slug: string) => ContentItem | undefined;
   getPrivateBySlug: (slug: string) => ContentItem | undefined;
+  getGiftCardBySlug: (slug: string) => ContentItem | undefined;
   getBlogPostBySlug: (slug: string) => BlogPost | undefined;
   getPageBySlug: (slug: string) => Page | undefined;
   refreshContent: () => Promise<void>;
@@ -93,6 +96,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const [classes, setClasses] = useState<ContentItem[]>([]);
   const [workshops, setWorkshops] = useState<ContentItem[]>([]);
   const [privates, setPrivates] = useState<ContentItem[]>([]);
+  const [giftCards, setGiftCards] = useState<ContentItem[]>([]);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [pages, setPages] = useState<Page[]>([]);
@@ -147,9 +151,15 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
       // Separar clases, workshops y privados
       const allItems = contentResponse.items || [];
-      setClasses(allItems.filter((item: ContentItem) => item.type === 'class' && item.visible));
-      setWorkshops(allItems.filter((item: ContentItem) => item.type === 'workshop' && item.visible));
-      setPrivates(allItems.filter((item: ContentItem) => item.type === 'private' && item.visible));
+      const visibleClasses = allItems.filter((item: ContentItem) => item.type === 'class' && item.visible);
+      const visibleWorkshops = allItems.filter((item: ContentItem) => item.type === 'workshop' && item.visible);
+      const visiblePrivates = allItems.filter((item: ContentItem) => item.type === 'private' && item.visible);
+      const visibleGiftCards = allItems.filter((item: ContentItem) => item.type === 'gift-card' && item.visible);
+      
+      setClasses(visibleClasses);
+      setWorkshops(visibleWorkshops);
+      setPrivates(visiblePrivates);
+      setGiftCards(visibleGiftCards);
       
       // Guardar el resto del contenido
       setBlogPosts(blogResponse.posts || []);
@@ -158,9 +168,10 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       setSettings(settingsResponse.settings || {});
       
       console.log('✅ Contenido cargado en memoria:', {
-        clases: allItems.filter((item: ContentItem) => item.type === 'class' && item.visible).length,
-        workshops: allItems.filter((item: ContentItem) => item.type === 'workshop' && item.visible).length,
-        privados: allItems.filter((item: ContentItem) => item.type === 'private' && item.visible).length,
+        clases: visibleClasses.length,
+        workshops: visibleWorkshops.length,
+        privados: visiblePrivates.length,
+        giftCards: visibleGiftCards.length,
         posts: (blogResponse.posts || []).length,
         páginas: (pagesResponse.pages || []).filter((page: Page) => page.visible).length,
         menuItems: (menuResponse.menu?.items || []).length
@@ -192,6 +203,10 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     return privates.find(p => p.slug === slug);
   };
 
+  const getGiftCardBySlug = (slug: string) => {
+    return giftCards.find(p => p.slug === slug);
+  };
+
   const getBlogPostBySlug = (slug: string) => {
     return blogPosts.find(p => p.slug === slug);
   };
@@ -207,14 +222,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   // Mostrar loading mientras se carga el contenido inicial
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="mt-4 text-foreground/60">Cargando...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
@@ -223,6 +231,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         classes,
         workshops,
         privates,
+        giftCards,
         blogPosts,
         menuItems,
         pages,
@@ -232,6 +241,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         getClassBySlug,
         getWorkshopBySlug,
         getPrivateBySlug,
+        getGiftCardBySlug,
         getBlogPostBySlug,
         getPageBySlug,
         refreshContent,

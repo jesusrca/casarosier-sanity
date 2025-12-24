@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import { Check } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { ScheduleDisplay } from './ScheduleDisplay';
 
 interface PageSectionProps {
@@ -397,9 +398,10 @@ export function PageSection({ section, siteSettings }: PageSectionProps) {
                     
                     {/* Descripción */}
                     {card.description && (
-                      <p className="text-sm text-foreground/70 mb-6 leading-relaxed">
-                        {card.description}
-                      </p>
+                      <div 
+                        className="text-sm text-foreground/70 mb-6 leading-relaxed rich-content"
+                        dangerouslySetInnerHTML={{ __html: card.description }}
+                      />
                     )}
                     
                     {/* Información de clases y personas */}
@@ -428,16 +430,39 @@ export function PageSection({ section, siteSettings }: PageSectionProps) {
                     )}
                     
                     {/* CTA opcional */}
-                    {card.ctaText && card.ctaLink && (
-                      <a
-                        href={card.ctaLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block w-full bg-primary text-white text-center py-3 rounded-xl hover:bg-primary/90 transition-colors mt-6"
-                      >
-                        {card.ctaText}
-                      </a>
-                    )}
+                    {card.ctaText && card.ctaLink && (() => {
+                      // Detectar si es un link externo (URL completa) o interno (ruta relativa)
+                      const isExternal = card.ctaLink.startsWith('http://') || 
+                                        card.ctaLink.startsWith('https://') || 
+                                        card.ctaLink.startsWith('//');
+                      
+                      // Estilo compartido del botón
+                      const buttonClass = "block w-full bg-primary text-white text-center py-3 rounded-xl hover:bg-primary/90 transition-colors mt-6";
+                      
+                      // Si es externo, usar <a> con target="_blank"
+                      if (isExternal) {
+                        return (
+                          <a
+                            href={card.ctaLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={buttonClass}
+                          >
+                            {card.ctaText}
+                          </a>
+                        );
+                      }
+                      
+                      // Si es interno, usar Link de react-router-dom para navegación SPA
+                      return (
+                        <Link
+                          to={card.ctaLink}
+                          className={buttonClass}
+                        >
+                          {card.ctaText}
+                        </Link>
+                      );
+                    })()}
                   </div>
                 </motion.div>
               ))}

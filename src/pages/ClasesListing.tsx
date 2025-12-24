@@ -9,15 +9,60 @@ import { Calendar, Clock, ArrowRight, SortAsc, SortDesc, Users } from 'lucide-re
 type SortOrder = 'newest' | 'oldest';
 
 export function ClasesListing() {
-  const { classes, loading } = useContent();
+  const { classes, workshops, privates, loading, settings } = useContent();
   const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
 
-  // Ordenar clases según el criterio seleccionado
-  const sortedClasses = [...classes].sort((a, b) => {
-    const dateA = new Date(a.createdAt).getTime();
-    const dateB = new Date(b.createdAt).getTime();
+  // Combinar solo clases y workshops (excluir privates)
+  const allItems = [...classes, ...workshops];
+
+  // Debug: Ver qué datos están llegando
+  console.log('📊 ClasesListing - Datos cargados:', {
+    classes: classes.length,
+    workshops: workshops.length,
+    privates: privates.length,
+    allItems: allItems.length,
+    sampleItem: allItems[0]
+  });
+
+  // Ordenar según el criterio seleccionado
+  const sortedItems = [...allItems].sort((a, b) => {
+    const dateA = new Date(a.createdAt || 0).getTime();
+    const dateB = new Date(b.createdAt || 0).getTime();
     return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
   });
+
+  // Extraer la imagen del título desde settings
+  const titleImageUrl = typeof settings.clasesHeroTitleImage === 'string' 
+    ? settings.clasesHeroTitleImage 
+    : settings.clasesHeroTitleImage?.url || '';
+
+  // Función para obtener el label del tipo
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'class':
+        return 'Clase';
+      case 'workshop':
+        return 'Workshop';
+      case 'private':
+        return 'Clase Privada';
+      default:
+        return 'Clase';
+    }
+  };
+
+  // Función para obtener el color del tipo
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'class':
+        return 'bg-primary text-white';
+      case 'workshop':
+        return 'bg-secondary text-white';
+      case 'private':
+        return 'bg-foreground text-background';
+      default:
+        return 'bg-primary text-white';
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -31,7 +76,8 @@ export function ClasesListing() {
         backgroundImage="https://images.unsplash.com/photo-1660958639203-cbc9bb56955b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjZXJhbWljJTIwdmFzZSUyMG1pbmltYWx8ZW58MXx8fHwxNzY1MTQ4MzMxfDA&ixlib=rb-4.1.0&q=80&w=1080"
         title="Clases"
         subtitle="Aprende cerámica con nosotros"
-        useTextTitle={true}
+        useTextTitle={!titleImageUrl}
+        titleImage={titleImageUrl}
       />
 
       <section className="py-16 lg:py-24 bg-background">
@@ -72,96 +118,141 @@ export function ClasesListing() {
                 </div>
               ))}
             </div>
-          ) : classes.length === 0 ? (
+          ) : allItems.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-foreground/60">No hay clases disponibles en este momento</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {sortedClasses.map((clase, index) => (
-                <motion.article
-                  key={clase.slug}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="bg-white rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-border group"
-                >
-                  <Link to={`/clases/${clase.slug}`} className="block">
-                    {clase.featuredImage ? (
-                      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-                        <img
-                          src={clase.featuredImage}
-                          alt={clase.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      </div>
-                    ) : (
-                      <div className="aspect-[4/3] bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                        <span className="text-4xl text-primary/20">🎨</span>
-                      </div>
-                    )}
-                  </Link>
-                  
-                  <div className="p-6 space-y-4">
-                    {/* Metadata */}
-                    <div className="flex flex-wrap items-center gap-4 text-xs text-foreground/60">
-                      {clase.duration && (
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="w-3.5 h-3.5" />
-                          <span>{clase.duration}</span>
-                        </div>
-                      )}
-                      {clase.level && (
-                        <div className="flex items-center gap-1.5">
-                          <Users className="w-3.5 h-3.5" />
-                          <span className="capitalize">{clase.level}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <Link to={`/clases/${clase.slug}`}>
-                      <h3 className="text-xl leading-tight group-hover:text-primary transition-colors line-clamp-2">
-                        {clase.title}
-                      </h3>
-                    </Link>
-
-                    {clase.subtitle && (
-                      <p className="text-sm text-primary/80 line-clamp-1">
-                        {clase.subtitle}
-                      </p>
-                    )}
-
-                    {clase.shortDescription && (
-                      <p className="text-foreground/70 text-sm leading-relaxed line-clamp-3">
-                        {clase.shortDescription}
-                      </p>
-                    )}
-
-                    {/* Precio */}
-                    {clase.price && (
-                      <div className="pt-2 border-t border-border">
-                        <p className="text-lg text-primary">
-                          {clase.price}€
-                          {clase.priceDetails && (
-                            <span className="text-sm text-foreground/60 ml-2">
-                              {clase.priceDetails}
+              {sortedItems.map((item, index) => {
+                // Obtener la imagen: featuredImage o primera del array de images
+                // Manejar tanto strings como objetos con propiedad 'url'
+                let imageUrl = null;
+                
+                if (item.featuredImage) {
+                  imageUrl = typeof item.featuredImage === 'string' 
+                    ? item.featuredImage 
+                    : item.featuredImage?.url;
+                } else if (item.images && item.images.length > 0) {
+                  const firstImage = item.images[0];
+                  imageUrl = typeof firstImage === 'string' 
+                    ? firstImage 
+                    : firstImage?.url;
+                }
+                
+                console.log('🖼️ Imagen para', item.title, ':', {
+                  featuredImage: item.featuredImage,
+                  images: item.images,
+                  imageUrl
+                });
+                
+                // Crear una key única combinando tipo, id y slug
+                const uniqueKey = item.id || `${item.type}-${item.slug || index}`;
+                
+                // Determinar la ruta correcta según el tipo
+                const itemPath = item.type === 'class' 
+                  ? `/clases/${item.slug}`
+                  : item.type === 'workshop'
+                  ? `/workshops/${item.slug}`
+                  : `/privada/${item.slug}`;
+                
+                return (
+                  <motion.article
+                    key={uniqueKey}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    className="bg-white rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-border group"
+                  >
+                    <Link to={itemPath} className="block relative">
+                      {imageUrl ? (
+                        <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+                          <img
+                            src={imageUrl}
+                            alt={item.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                          {/* Etiqueta de tipo */}
+                          <div className="absolute top-3 left-3">
+                            <span className={`px-3 py-1 rounded-full text-xs ${getTypeColor(item.type)}`}>
+                              {getTypeLabel(item.type)}
                             </span>
-                          )}
-                        </p>
-                      </div>
-                    )}
-
-                    <Link
-                      to={`/clases/${clase.slug}`}
-                      className="inline-flex items-center gap-2 text-primary text-sm hover:gap-3 transition-all pt-2"
-                    >
-                      Ver detalles
-                      <ArrowRight className="w-4 h-4" />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="aspect-[4/3] bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center relative">
+                          <span className="text-4xl text-primary/20">🎨</span>
+                          {/* Etiqueta de tipo */}
+                          <div className="absolute top-3 left-3">
+                            <span className={`px-3 py-1 rounded-full text-xs ${getTypeColor(item.type)}`}>
+                              {getTypeLabel(item.type)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </Link>
-                  </div>
-                </motion.article>
-              ))}
+                    
+                    <div className="p-6 space-y-4">
+                      {/* Metadata */}
+                      <div className="flex flex-wrap items-center gap-4 text-xs text-foreground/60">
+                        {item.duration && (
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5" />
+                            <span>{item.duration}</span>
+                          </div>
+                        )}
+                        {item.level && (
+                          <div className="flex items-center gap-1.5">
+                            <Users className="w-3.5 h-3.5" />
+                            <span className="capitalize">{item.level}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <Link to={itemPath}>
+                        <h3 className="text-xl leading-tight group-hover:text-primary transition-colors line-clamp-2">
+                          {item.title}
+                        </h3>
+                      </Link>
+
+                      {item.subtitle && (
+                        <p className="text-sm text-primary/80 line-clamp-1">
+                          {item.subtitle}
+                        </p>
+                      )}
+
+                      {item.shortDescription && (
+                        <p className="text-foreground/70 text-sm leading-relaxed line-clamp-3">
+                          {item.shortDescription}
+                        </p>
+                      )}
+
+                      {/* Precio - solo mostrar si existe y es mayor que 0 */}
+                      {item.price && item.price > 0 && (
+                        <div className="pt-2 border-t border-border">
+                          <p className="text-lg text-primary">
+                            {item.price}€
+                            {item.priceDetails && (
+                              <span className="text-sm text-foreground/60 ml-2">
+                                {item.priceDetails}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      )}
+
+                      <Link
+                        to={itemPath}
+                        className="inline-flex items-center gap-2 text-primary text-sm hover:gap-3 transition-all pt-2"
+                      >
+                        Ver detalles
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  </motion.article>
+                );
+              })}
             </div>
           )}
         </div>

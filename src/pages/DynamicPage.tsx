@@ -3,9 +3,10 @@ import { useParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useContent } from '../contexts/ContentContext';
 import { Hero } from '../components/Hero';
-import { SEO } from '../components/SEO';
+import { SEOHead } from '../components/SEOHead';
 import { NotFound } from './NotFound';
 import { PageSection } from '../components/PageSection';
+import { LoadingScreen } from '../components/LoadingScreen';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 
@@ -26,23 +27,43 @@ interface Page {
 
 export function DynamicPage() {
   const { slug } = useParams<{ slug: string }>();
-  const { getPageBySlug, loading, settings } = useContent();
+  const { getPageBySlug, loading, settings, pages } = useContent();
+  const [showNotFound, setShowNotFound] = useState(false);
   
   const page = getPageBySlug(slug || '');
 
-  // Si está cargando y no hay página, mostrar skeleton sutil
-  if (loading && !page) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-foreground/60">Cargando...</p>
-        </div>
-      </div>
-    );
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 DynamicPage Debug:', {
+      slug,
+      loading,
+      pageFound: !!page,
+      pageTitle: page?.title,
+      totalPages: pages?.length,
+      availablePages: pages?.map(p => ({ slug: p.slug, title: p.title }))
+    });
+  }, [slug, page, loading, pages]);
+
+  // Control del delay antes de mostrar 404 para evitar flash durante transiciones
+  useEffect(() => {
+    if (!page && !loading) {
+      // Dar un margen de tiempo más largo antes de mostrar 404
+      const timer = setTimeout(() => {
+        console.log('⚠️ Mostrando 404 para slug:', slug);
+        setShowNotFound(true);
+      }, 600); // Aumentado a 600ms
+      return () => clearTimeout(timer);
+    } else {
+      setShowNotFound(false);
+    }
+  }, [page, loading, slug]);
+
+  // Si está cargando o esperando para mostrar 404, mostrar skeleton
+  if (loading || (!page && !showNotFound)) {
+    return <LoadingScreen />;
   }
 
-  if (!page) {
+  if (!page && showNotFound) {
     return <NotFound />;
   }
 
@@ -56,10 +77,14 @@ export function DynamicPage() {
 
     return (
       <div className="min-h-screen">
-        <SEO 
+        {/* SEOHead with Open Graph */}
+        <SEOHead
           title={page.seo?.metaTitle || page.title}
           description={page.seo?.metaDescription}
-          keywords={page.seo?.keywords}
+          keywords={Array.isArray(page.seo?.keywords) ? page.seo?.keywords.join(', ') : page.seo?.keywords}
+          image={page.heroImage || heroSection?.image}
+          url={`${settings.ogUrl || window.location.origin}/${slug}`}
+          type={settings.ogType || 'website'}
         />
 
         {/* Si la primera sección es hero, usar el componente Hero completo con logo y menú */}
@@ -83,10 +108,14 @@ export function DynamicPage() {
   // Si solo tiene contenido, mostrar el formato tradicional con caja blanca
   return (
     <div className="min-h-screen">
-      <SEO 
+      {/* SEOHead with Open Graph */}
+      <SEOHead
         title={page.seo?.metaTitle || page.title}
         description={page.seo?.metaDescription}
-        keywords={page.seo?.keywords}
+        keywords={Array.isArray(page.seo?.keywords) ? page.seo?.keywords.join(', ') : page.seo?.keywords}
+        image={page.heroImage}
+        url={`${settings.ogUrl || window.location.origin}/${slug}`}
+        type={settings.ogType || 'website'}
       />
 
       {page.heroImage && (

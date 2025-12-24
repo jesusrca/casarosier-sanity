@@ -24,10 +24,10 @@ export function HeroHome() {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [mainMenuItems, setMainMenuItems] = useState<MenuItem[]>([]);
   const [heroImages, setHeroImages] = useState({
-    desktop: heroBackgroundImage,
-    mobile: heroBackgroundImage
+    desktop: '',
+    mobile: ''
   });
-  const [heroTextImages, setHeroTextImages] = useState<string[]>([heroTextImage]);
+  const [heroTextImages, setHeroTextImages] = useState<string[]>([]);
   const [currentTextImageIndex, setCurrentTextImageIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const [imagesLoaded, setImagesLoaded] = useState(false);
@@ -100,10 +100,26 @@ export function HeroHome() {
         
         if (textImages.length > 0) {
           setHeroTextImages(textImages);
+        } else {
+          // Use default text image if no custom images configured
+          setHeroTextImages([heroTextImage]);
         }
+      } else {
+        // No settings found, use defaults
+        setHeroImages({
+          desktop: heroBackgroundImage,
+          mobile: heroBackgroundImage
+        });
+        setHeroTextImages([heroTextImage]);
       }
     } catch (error) {
       console.log('Settings not found, using default images:', error);
+      // Use defaults on error
+      setHeroImages({
+        desktop: heroBackgroundImage,
+        mobile: heroBackgroundImage
+      });
+      setHeroTextImages([heroTextImage]);
     } finally {
       // Always mark as loaded, even if API fails
       setImagesLoaded(true);
@@ -168,19 +184,26 @@ export function HeroHome() {
     nextSection?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const handleImageLoad = () => {
+    console.log('📸 Image loaded:', isMobile ? 'MOBILE' : 'DESKTOP', isMobile ? heroImages.mobile : heroImages.desktop);
+  };
+
   return (
     <section className="relative h-screen w-full overflow-hidden">
-      {/* Background Image - Renderiza solo la imagen correspondiente */}
-      <img
-        src={isMobile ? heroImages.mobile : heroImages.desktop}
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
-        style={{ opacity: imagesLoaded ? 1 : 0 }}
-        key={isMobile ? 'mobile' : 'desktop'} // Force re-render when switching
-        onLoad={() => {
-          console.log('📸 Image loaded:', isMobile ? 'MOBILE' : 'DESKTOP', isMobile ? heroImages.mobile : heroImages.desktop);
-        }}
-      />
+      {/* Background Image - Renderiza solo la imagen correspondiente con eager loading */}
+      {(heroImages.desktop || heroImages.mobile) && (
+        <img
+          src={isMobile ? heroImages.mobile : heroImages.desktop}
+          alt=""
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+          style={{ opacity: imagesLoaded ? 1 : 0 }}
+          key={isMobile ? 'mobile' : 'desktop'} // Force re-render when switching
+          onLoad={handleImageLoad}
+        />
+      )}
       {/* Overlay for better text readability */}
       <div className="absolute inset-0 bg-black/10"></div>
 
@@ -198,6 +221,7 @@ export function HeroHome() {
               <img 
                 src={logoImage} 
                 alt="Casa Rosier" 
+                loading="eager"
                 className="h-16 sm:h-20 w-auto"
               />
             </Link>
@@ -271,7 +295,7 @@ export function HeroHome() {
       </div>
 
       {/* Center Content - Hero Text */}
-      <div className="relative z-10 md:flex-1 md:flex md:items-center md:justify-center md:mt-[10vh] px-4 absolute md:relative top-[calc(40%-20px)] md:top-auto -translate-y-1/2 md:translate-y-0 left-0 right-0">
+      <div className="relative z-10 md:flex-1 md:flex md:items-center md:justify-center md:mt-[10vh] px-4 absolute md:relative top-[calc(40%-60px)] md:top-auto -translate-y-1/2 md:translate-y-0 left-0 right-0">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}

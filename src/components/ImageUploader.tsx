@@ -139,6 +139,23 @@ export function ImageUploader({ currentImage, onImageSelect, label = 'Imagen', c
     setShowGallery(false);
   };
 
+  const handleDeleteFromGallery = async (image: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!confirm(`¿Estás seguro de eliminar "${image.name}"?`)) {
+      return;
+    }
+
+    try {
+      await uploadAPI.deleteImage(image.name);
+      // Recargar la galería después de eliminar
+      await loadGallery();
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      alert('Error al eliminar la imagen. Por favor intenta de nuevo.');
+    }
+  };
+
   const handleRemoveImage = () => {
     setPreview(null);
     onImageSelect('');
@@ -307,23 +324,35 @@ export function ImageUploader({ currentImage, onImageSelect, label = 'Imagen', c
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {galleryImages.map((image) => (
-                    <button
+                    <div
                       key={image.name}
-                      type="button"
-                      onClick={() => handleSelectFromGallery(image.url)}
                       className="relative group aspect-square rounded-lg overflow-hidden border-2 border-gray-200 hover:border-primary transition-colors"
                     >
-                      <img
-                        src={image.url}
-                        alt={image.name}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                        <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm">
-                          Seleccionar
-                        </span>
-                      </div>
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectFromGallery(image.url)}
+                        className="w-full h-full"
+                      >
+                        <img
+                          src={image.url}
+                          alt={image.name}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                          <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm">
+                            Seleccionar
+                          </span>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => handleDeleteFromGallery(image, e)}
+                        className="absolute top-2 right-2 p-2 bg-red-500/80 hover:bg-red-600 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                        title="Eliminar imagen"
+                      >
+                        <Trash2 size={16} className="text-white" />
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}

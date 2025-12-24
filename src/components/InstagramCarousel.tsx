@@ -124,18 +124,27 @@ export function InstagramCarousel({
           <Slider {...settings}>
             {normalizedImages.map((image, index) => (
               <div key={index} className="px-0.5 sm:px-2">
-                <motion.button
+                <button
+                  key={index}
                   onClick={() => handleImageClick(index)}
-                  className="block w-full aspect-square overflow-hidden rounded-lg shadow-md cursor-pointer"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.3 }}
+                  className="relative aspect-[5/6] overflow-hidden group cursor-pointer mx-1"
                 >
-                  <ImageWithFallback
+                  <img
                     src={image.url}
-                    alt={image.title || `Instagram post ${index + 1}`}
-                    className="w-full h-full object-cover"
+                    alt={image.title || `Instagram photo ${index + 1}`}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    loading="lazy"
+                    onError={(e) => {
+                      console.error('Error cargando imagen:', image.url);
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1737564483280-15481c31608a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjZXJhbWljJTIwcG90dGVyeSUyMGhhbmRzJTIwd29ya3Nob3B8ZW58MXx8fHwxNzY1MTUwMjg4fDA&ixlib=rb-4.1.0&q=80&w=1080';
+                    }}
                   />
-                </motion.button>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white text-sm">
+                      Ver
+                    </div>
+                  </div>
+                </button>
               </div>
             ))}
           </Slider>
