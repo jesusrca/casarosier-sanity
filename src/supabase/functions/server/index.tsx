@@ -488,6 +488,12 @@ app.get("/make-server-0ba58e95/content/items", async (c) => {
 app.get("/make-server-0ba58e95/content/items/:id", async (c) => {
   try {
     const id = c.req.param('id');
+    
+    // Validar que el ID no esté vacío
+    if (!id) {
+      return c.json({ error: 'Invalid content item ID' }, 400);
+    }
+    
     const item = await kv.get(`content:${id}`);
     
     if (!item) {
@@ -497,7 +503,7 @@ app.get("/make-server-0ba58e95/content/items/:id", async (c) => {
     return c.json({ item });
   } catch (error) {
     console.error('Error fetching content item:', error);
-    return c.json({ error: `Error fetching content item: ${error}` }, 500);
+    return c.json({ error: `Error fetching content item: ${error instanceof Error ? error.message : String(error)}` }, 500);
   }
 });
 
@@ -2419,21 +2425,52 @@ setTimeout(cleanupOldVersions, 5 * 60 * 1000);
 // Envolver app.fetch para manejar errores correctamente
 Deno.serve(async (req) => {
   try {
-    return await app.fetch(req);
+    const response = await app.fetch(req);
+    
+    // Asegurar que siempre retornamos una Response válida
+    if (!response || !(response instanceof Response)) {
+      console.error('Invalid response from app.fetch:', response);
+      return new Response(
+        JSON.stringify({ error: 'Internal server error: Invalid response' }), 
+        { 
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          }
+        }
+      );
+    }
+    
+    return response;
   } catch (error) {
     console.error('Unhandled error in request handler:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : String(error)
-      }), 
-      { 
+    
+    // Asegurar que siempre retornamos una Response válida incluso en caso de error
+    try {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Internal server error',
+          message: error instanceof Error ? error.message : String(error)
+        }), 
+        { 
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          }
+        }
+      );
+    } catch (responseError) {
+      // Último recurso: retornar una respuesta mínima
+      console.error('Error creating error response:', responseError);
+      return new Response('Internal Server Error', { 
         status: 500,
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'text/plain',
           'Access-Control-Allow-Origin': '*',
         }
-      }
-    );
+      });
+    }
   }
 });

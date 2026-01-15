@@ -16,13 +16,18 @@ async function getAuthToken(): Promise<string | null> {
     if (error) {
       console.warn('Session error, clearing invalid session:', error.message);
       
-      // Limpiar sesión y storage
-      await supabase.auth.signOut();
-      localStorage.removeItem('supabase.auth.token');
-      
-      // Si estamos en admin, redirigir al login
-      if (window.location.pathname.startsWith('/admin')) {
-        window.location.href = '/admin/login';
+      // Solo limpiar si NO es un error de red
+      if (!error.message.includes('Failed to fetch') && !error.message.includes('fetch')) {
+        // Limpiar sesión y storage
+        await supabase.auth.signOut().catch(() => {
+          // Ignorar errores de signOut
+        });
+        localStorage.removeItem('supabase.auth.token');
+        
+        // Si estamos en admin, redirigir al login
+        if (window.location.pathname.startsWith('/admin')) {
+          window.location.href = '/admin/login';
+        }
       }
       
       return null;
@@ -32,9 +37,18 @@ async function getAuthToken(): Promise<string | null> {
   } catch (error) {
     console.error('Error getting auth token:', error);
     
-    // Limpiar en caso de error crítico
+    // Si es un error de red, no limpiar la sesión (puede ser temporal)
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes('Failed to fetch') || errorMessage.includes('fetch')) {
+      console.warn('Network error getting token, keeping session');
+      return null;
+    }
+    
+    // Limpiar en caso de error crítico no relacionado con red
     try {
-      await supabase.auth.signOut();
+      await supabase.auth.signOut().catch(() => {
+        // Ignorar errores de signOut
+      });
       localStorage.removeItem('supabase.auth.token');
     } catch (cleanupError) {
       console.error('Error during cleanup:', cleanupError);
@@ -48,7 +62,7 @@ async function getAuthToken(): Promise<string | null> {
 async function apiCall(endpoint: string, options: RequestInit = {}, cacheKey?: string, cacheTTL?: number) {
   const maxRetries = 3;
   const retryDelay = 1000; // 1 segundo
-  const requestTimeout = 10000; // 10 segundos timeout por petición (aumentado desde 8)
+  const requestTimeout = 30000; // 30 segundos timeout por petición (aumentado para operaciones lentas)
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -81,7 +95,10 @@ async function apiCall(endpoint: string, options: RequestInit = {}, cacheKey?: s
 
       // Crear controller para timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), requestTimeout);
+      const timeoutId = setTimeout(() => {
+        console.warn(`⏱️ Request timeout for ${endpoint} after ${requestTimeout}ms`);
+        controller.abort();
+      }, requestTimeout);
 
       try {
         const response = await fetch(url, {
@@ -114,15 +131,22 @@ async function apiCall(endpoint: string, options: RequestInit = {}, cacheKey?: s
     } catch (error) {
       const isLastAttempt = attempt === maxRetries;
       
+      // Detectar si es error de abort/timeout
+      const isAbortError = error instanceof DOMException && error.name === 'AbortError';
+      const isNetworkError = error instanceof TypeError;
+      
       // Si es un error de timeout o de red y no es el último intento, reintentar
-      if ((error instanceof TypeError || error instanceof DOMException) && !isLastAttempt) {
-        console.warn(`⚠️ API call failed for ${endpoint} (attempt ${attempt}/${maxRetries}), retrying...`, error);
+      if ((isAbortError || isNetworkError) && !isLastAttempt) {
+        const errorType = isAbortError ? 'timeout' : 'network error';
+        console.warn(`⚠️ API call failed for ${endpoint} (attempt ${attempt}/${maxRetries}) due to ${errorType}, retrying...`);
         await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
         continue;
       }
       
       // Log the error and throw
-      console.error(`❌ API call failed for ${endpoint} after ${attempt} attempts:`, error);
+      if (isLastAttempt) {
+        console.error(`❌ API call failed for ${endpoint} after ${attempt} attempts:`, error);
+      }
       
       // Si es el último intento o no es un error de red, lanzar el error
       throw error;

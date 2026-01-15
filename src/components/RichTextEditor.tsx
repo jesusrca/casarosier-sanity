@@ -48,7 +48,7 @@ export function RichTextEditor({
         link: false,
       }),
       Image.configure({
-        inline: true,
+        inline: false,
         allowBase64: true,
       }),
       Link.configure({
@@ -58,7 +58,7 @@ export function RichTextEditor({
         },
       }),
       TextAlign.configure({
-        types: ['heading', 'paragraph'],
+        types: ['heading', 'paragraph', 'image'],
       }),
       Placeholder.configure({
         placeholder,
@@ -399,6 +399,26 @@ export function RichTextEditor({
           border-radius: 0.5rem;
           margin: 1em 0;
           display: block;
+        }
+
+        .editor-content-wrapper .tiptap img.ProseMirror-selectednode {
+          outline: 3px solid #FF5100;
+        }
+
+        /* Image Alignment */
+        .editor-content-wrapper .tiptap img[style*="text-align: center"] {
+          margin-left: auto;
+          margin-right: auto;
+        }
+        
+        .editor-content-wrapper .tiptap img[style*="text-align: right"] {
+          margin-left: auto;
+          margin-right: 0;
+        }
+        
+        .editor-content-wrapper .tiptap img[style*="text-align: left"] {
+          margin-right: auto;
+          margin-left: 0;
         }
 
         /* Iframes/Videos */

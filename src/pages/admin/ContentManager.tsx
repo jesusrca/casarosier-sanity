@@ -83,6 +83,16 @@ export function ContentManager() {
       setItems(sortedItems);
     } catch (error) {
       console.error('Error loading items:', error);
+      
+      // Mostrar mensaje de error más informativo
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('timeout') || errorMessage.includes('AbortError')) {
+        console.error('⏱️ La petición tardó demasiado. El servidor puede estar sobrecargado. Por favor, intenta de nuevo.');
+      } else if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+        console.error('🌐 Error de red. Verifica tu conexión a Internet.');
+      } else {
+        console.error('❌ Error al cargar items:', errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -715,10 +725,10 @@ export function ContentManager() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
         <div className="flex flex-col gap-4">
           {/* Primera fila: Búsqueda y Filtros de tipo */}
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-foreground/40" />
@@ -727,14 +737,14 @@ export function ContentManager() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Buscar..."
-                  className="w-full pl-10 pr-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full pl-10 pr-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                 />
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-4 sm:flex gap-2">
               <button
                 onClick={() => setFilter('all')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
+                className={`px-2 sm:px-4 py-2 rounded-lg transition-colors text-xs sm:text-sm whitespace-nowrap ${
                   filter === 'all'
                     ? 'bg-primary text-white'
                     : 'bg-foreground/5 text-foreground/70 hover:bg-foreground/10'
@@ -744,7 +754,7 @@ export function ContentManager() {
               </button>
               <button
                 onClick={() => setFilter('class')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
+                className={`px-2 sm:px-4 py-2 rounded-lg transition-colors text-xs sm:text-sm whitespace-nowrap ${
                   filter === 'class'
                     ? 'bg-primary text-white'
                     : 'bg-foreground/5 text-foreground/70 hover:bg-foreground/10'
@@ -754,34 +764,36 @@ export function ContentManager() {
               </button>
               <button
                 onClick={() => setFilter('workshop')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
+                className={`px-2 sm:px-4 py-2 rounded-lg transition-colors text-xs sm:text-sm whitespace-nowrap ${
                   filter === 'workshop'
                     ? 'bg-primary text-white'
                     : 'bg-foreground/5 text-foreground/70 hover:bg-foreground/10'
                 }`}
               >
-                Workshops
+                <span className="hidden xs:inline">Workshops</span>
+                <span className="xs:hidden">Works</span>
               </button>
               <button
                 onClick={() => setFilter('private')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
+                className={`px-2 sm:px-4 py-2 rounded-lg transition-colors text-xs sm:text-sm whitespace-nowrap ${
                   filter === 'private'
                     ? 'bg-primary text-white'
                     : 'bg-foreground/5 text-foreground/70 hover:bg-foreground/10'
                 }`}
               >
-                Privadas
+                <span className="hidden xs:inline">Privadas</span>
+                <span className="xs:hidden">Priv</span>
               </button>
             </div>
           </div>
           
           {/* Segunda fila: Ordenamiento */}
-          <div className="flex items-center gap-3 pt-4 border-t border-foreground/10">
-            <span className="text-sm text-foreground/60">Ordenar por:</span>
-            <div className="flex gap-2">
+          <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2 xs:gap-3 pt-3 sm:pt-4 border-t border-foreground/10">
+            <span className="text-xs sm:text-sm text-foreground/60">Ordenar por:</span>
+            <div className="flex gap-2 w-full xs:w-auto">
               <button
                 onClick={() => setSortOrder('newest')}
-                className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                className={`flex-1 xs:flex-none px-3 sm:px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm ${
                   sortOrder === 'newest'
                     ? 'bg-primary text-white'
                     : 'bg-foreground/5 text-foreground/70 hover:bg-foreground/10'
@@ -793,7 +805,7 @@ export function ContentManager() {
               </button>
               <button
                 onClick={() => setSortOrder('oldest')}
-                className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                className={`flex-1 xs:flex-none px-3 sm:px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm ${
                   sortOrder === 'oldest'
                     ? 'bg-primary text-white'
                     : 'bg-foreground/5 text-foreground/70 hover:bg-foreground/10'

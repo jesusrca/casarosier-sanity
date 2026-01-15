@@ -5,6 +5,7 @@ import { AnimatePresence } from 'motion/react';
 import { lazy, Suspense } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { ContentProvider, useContent } from './contexts/ContentContext';
+import { WhatsAppProvider, useWhatsApp } from './contexts/WhatsAppContext';
 import { ScrollHeader } from './components/ScrollHeader';
 import { Footer } from './components/Footer';
 import { ScrollToTop } from './components/ScrollToTop';
@@ -14,6 +15,7 @@ import { GoogleAnalytics } from './components/GoogleAnalytics';
 import { RedirectManager } from './components/RedirectManager';
 import { PageTransition } from './components/PageTransition';
 import { LoadingScreen } from './components/LoadingScreen';
+import { NetworkStatus } from './components/NetworkStatus';
 import './styles/globals.css';
 
 // Lazy load de páginas no críticas para reducir bundle inicial
@@ -34,7 +36,11 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 function AppContent() {
   const location = useLocation();
   const { settings } = useContent();
+  const { phoneNumber } = useWhatsApp();
   const isAdminRoute = location.pathname.startsWith('/admin');
+
+  // Usar el número específico de la página actual, o el global, o el fallback
+  const whatsappNumber = phoneNumber || settings.whatsappNumber;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -43,7 +49,7 @@ function AppContent() {
       {settings.googleAnalyticsId && <GoogleAnalytics trackingId={settings.googleAnalyticsId} />}
       {settings.redirects && <RedirectManager redirects={settings.redirects} />}
       {!isAdminRoute && <ScrollHeader />}
-      {!isAdminRoute && <WhatsAppButton />}
+      {!isAdminRoute && <WhatsAppButton phoneNumber={whatsappNumber} />}
       <main className="flex-1">
         <AnimatePresence mode="wait">
           <Suspense fallback={<LoadingScreen />}>
@@ -88,13 +94,16 @@ function App() {
       <Router>
         <AuthProvider>
           <ContentProvider>
-            <Toaster 
-              position="top-right" 
-              expand={false}
-              richColors
-              closeButton
-            />
-            <AppContent />
+            <WhatsAppProvider>
+              <NetworkStatus />
+              <Toaster 
+                position="top-right" 
+                expand={false}
+                richColors
+                closeButton
+              />
+              <AppContent />
+            </WhatsAppProvider>
           </ContentProvider>
         </AuthProvider>
       </Router>

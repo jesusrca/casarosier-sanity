@@ -530,6 +530,24 @@ export function ContentEditor({ item: initialItem, onSave, onCancel, onDelete }:
                       )}
                     </div>
 
+                    {/* Número de WhatsApp específico */}
+                    <div>
+                      <label className="block text-sm mb-2">
+                        Número de WhatsApp (Opcional)
+                      </label>
+                      <input
+                        type="tel"
+                        value={item.whatsappNumber || ''}
+                        onChange={(e) => updateField('whatsappNumber', e.target.value)}
+                        placeholder="Ej: 34633788860 (deja vacío para usar el número por defecto)"
+                        className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                      <p className="text-xs text-foreground/60 mt-1">
+                        Número para el botón "Consultar" en formato internacional sin espacios (ej: 34633788860). 
+                        Si se deja vacío, se usará el número configurado globalmente en Ajustes.
+                      </p>
+                    </div>
+
                     <div className="flex items-center gap-2">
                       <input
                         type="checkbox"

@@ -102,6 +102,7 @@ export function SettingsManager() {
         contactEmail: 'info@casarosierceramica.com',
         contactEmail2: '',
         contactPhone: '+34 633788860',
+        whatsappNumber: '34633788860',
         heroImageDesktop: '',
         heroImageMobile: '',
         heroTextImage1: '',
@@ -1014,6 +1015,20 @@ export function SettingsManager() {
                 onChange={(e) => updateField('contactPhone', e.target.value)}
                 className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm mb-2">Número de WhatsApp (Por Defecto)</label>
+              <input
+                type="tel"
+                value={settings.whatsappNumber || ''}
+                onChange={(e) => updateField('whatsappNumber', e.target.value)}
+                placeholder="34633788860"
+                className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <p className="text-xs text-foreground/60 mt-1">
+                Número en formato internacional sin espacios (ej: 34633788860). Este número se usará en el botón flotante de WhatsApp y en los botones "Consultar" de clases/workshops que no tengan un número específico configurado.
+              </p>
             </div>
           </div>
         </div>

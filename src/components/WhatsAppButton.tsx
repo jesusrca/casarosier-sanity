@@ -14,19 +14,29 @@ function WhatsAppIcon({ className }: { className?: string }) {
   );
 }
 
-export function WhatsAppButton() {
-  // Número de WhatsApp de Casa Rosier
-  const phoneNumber = '34633788860'; // Formato: código país + número sin espacios ni símbolos
-  const message = '¡Hola! Me gustaría obtener más información sobre Casa Rosier.';
+interface WhatsAppButtonProps {
+  phoneNumber?: string;
+  message?: string;
+  className?: string;
+}
+
+export function WhatsAppButton({ 
+  phoneNumber, 
+  message = '¡Hola! Me gustaría obtener más información sobre Casa Rosier.',
+  className = ''
+}: WhatsAppButtonProps = {}) {
+  // Número de WhatsApp por defecto (se puede sobrescribir con el prop)
+  const defaultPhoneNumber = '34633788860'; // Formato: código país + número sin espacios ni símbolos
+  const finalPhoneNumber = phoneNumber || defaultPhoneNumber;
   
-  const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+  const whatsappUrl = `https://wa.me/${finalPhoneNumber}?text=${encodeURIComponent(message)}`;
 
   return (
     <motion.a
       href={whatsappUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-6 right-6 z-50 bg-[#25D366] hover:bg-[#20BD5A] text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-110 group"
+      className={`fixed bottom-6 right-6 z-50 bg-[#25D366] hover:bg-[#20BD5A] text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-110 group ${className}`}
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ 

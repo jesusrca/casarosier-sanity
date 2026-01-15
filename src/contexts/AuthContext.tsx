@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // Add timeout to prevent hanging
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout (aumentado desde 5)
 
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-0ba58e95/users/${userId}/role`,
@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       // Silently fail - this is expected when server is unavailable
       // or during development/testing
+      console.warn('Failed to fetch user role, using default:', error instanceof Error ? error.message : 'Unknown error');
     }
     // Default to editor role without logging
     return 'editor';
@@ -61,13 +62,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.warn('Session error detected:', error.message);
         
-        if (error.message?.includes('refresh') || error.message?.includes('token')) {
-          console.log('Invalid refresh token, cleaning up');
-          await supabase.auth.signOut();
-          localStorage.removeItem('supabase.auth.token');
-          setUser(null);
-          setLoading(false);
-          return;
+        // Solo limpiar si NO es un error de red temporal
+        if (!error.message?.includes('Failed to fetch') && !error.message?.includes('fetch')) {
+          if (error.message?.includes('refresh') || error.message?.includes('token')) {
+            console.log('Invalid refresh token, cleaning up');
+            await supabase.auth.signOut().catch(() => {
+              // Ignorar errores de signOut
+            });
+            localStorage.removeItem('supabase.auth.token');
+            setUser(null);
+            setLoading(false);
+            return;
+          }
+        } else {
+          console.warn('Network error during session check, keeping session');
         }
       }
       
@@ -83,12 +91,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Error checking session:', error);
-      // Limpiar sesión en caso de error
-      try {
-        await supabase.auth.signOut();
-        localStorage.removeItem('supabase.auth.token');
-      } catch (cleanupError) {
-        console.error('Error during cleanup:', cleanupError);
+      
+      // Solo limpiar si NO es un error de red temporal
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (!errorMessage.includes('Failed to fetch') && !errorMessage.includes('fetch')) {
+        // Limpiar sesión en caso de error no relacionado con red
+        try {
+          await supabase.auth.signOut().catch(() => {
+            // Ignorar errores de signOut
+          });
+          localStorage.removeItem('supabase.auth.token');
+        } catch (cleanupError) {
+          console.error('Error during cleanup:', cleanupError);
+        }
+      } else {
+        console.warn('Network error in checkSession, keeping session');
       }
       setUser(null);
     } finally {
