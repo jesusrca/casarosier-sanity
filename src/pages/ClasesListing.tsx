@@ -10,7 +10,7 @@ type SortOrder = 'newest' | 'oldest';
 
 export function ClasesListing() {
   const { classes, workshops, privates, loading, settings } = useContent();
-  const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('oldest');
 
   // Combinar solo clases y workshops (excluir privates)
   const allItems = [...classes, ...workshops];

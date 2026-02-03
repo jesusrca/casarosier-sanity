@@ -175,11 +175,13 @@ export function Home() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <img
-                src={aboutMainImage}
-                alt="Casa Rosier Cerámica"
-                className="w-full h-[343px] lg:h-[411px] object-cover lg:object-contain lg:object-right"
-              />
+              {aboutMainImage && (
+                <img
+                  src={aboutMainImage}
+                  alt="Casa Rosier Cerámica"
+                  className="w-full h-[343px] lg:h-[411px] object-cover lg:object-contain lg:object-right"
+                />
+              )}
             </motion.div>
 
             {/* Text Content */}

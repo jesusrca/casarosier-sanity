@@ -172,7 +172,18 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       
       // Guardar el resto del contenido
       setBlogPosts(blogResponse.posts || []);
-      setMenuItems(menuResponse.menu?.items || []);
+
+      // Ordenar items del menú
+      const rawMenuItems = menuResponse.menu?.items || [];
+      const sortedMenuItems = [...rawMenuItems].sort((a: MenuItem, b: MenuItem) => (a.order || 0) - (b.order || 0));
+      // Ordenar submenús
+      sortedMenuItems.forEach((item: MenuItem) => {
+        if (item.submenu) {
+          item.submenu.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+        }
+      });
+      setMenuItems(sortedMenuItems);
+
       setPages((pagesResponse.pages || []).filter((page: Page) => page.visible));
       setSettings(settingsResponse.settings || {});
       
@@ -183,7 +194,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         giftCards: visibleGiftCards.length,
         posts: (blogResponse.posts || []).length,
         páginas: (pagesResponse.pages || []).filter((page: Page) => page.visible).length,
-        menuItems: (menuResponse.menu?.items || []).length
+        menuItems: sortedMenuItems.length
       });
     } catch (err) {
       console.error('❌ Error cargando contenido:', err);
@@ -249,11 +260,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     await loadAllContent();
   };
 
-  // Mostrar loading mientras se carga el contenido inicial
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
+  // Renderizar children inmediatamente, el estado loading se maneja internamente en los componentes
   return (
     <ContentContext.Provider
       value={{
