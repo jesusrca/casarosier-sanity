@@ -104,7 +104,7 @@ export async function fetchSettings() {
 export async function fetchPages() {
   const query = `*[_type == "page"]{
     "id": _id,
-    slug,
+    "slug": slug.current,
     title,
     content,
     seo,
