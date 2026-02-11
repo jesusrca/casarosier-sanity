@@ -1,5 +1,6 @@
 import { defineConfig } from 'sanity';
 import { deskTool } from 'sanity/desk';
+import { deskStructure } from './sanity/deskStructure';
 import { schemaTypes } from './sanity/schemaTypes';
 
 const projectId = process.env.SANITY_PROJECT_ID || 'ghh7ehj6';
@@ -10,7 +11,7 @@ export default defineConfig({
   title: 'Casa Rosier',
   projectId,
   dataset,
-  plugins: [deskTool()],
+  plugins: [deskTool({ structure: deskStructure })],
   schema: {
     types: schemaTypes,
   },

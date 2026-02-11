@@ -214,7 +214,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       });
       setMenuItems(sortedMenuItems);
 
-      setPages((pagesResponse || []).filter((page: Page) => page.visible));
+      setPages(pagesResponse || []);
       setSettings(settingsResponse || {});
       
       console.log('✅ Contenido cargado en memoria:', {

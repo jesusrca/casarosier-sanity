@@ -1,7 +1,7 @@
 import { sanityFetch } from './sanity';
 
 export async function fetchContentItems() {
-  const query = `*[_type == "contentItem"]{
+  const query = `*[_type == "curso"]{
     "id": _id,
     type,
     title,
@@ -107,9 +107,26 @@ export async function fetchPages() {
     slug,
     title,
     content,
-    visible,
     seo,
     "heroImage": heroImage.asset->url,
+    sections[]{
+      ...,
+      "mainImage": mainImage.asset->url,
+      "image": image.asset->url,
+      "images": images[]{ "url": asset->url },
+      "courses": courses[]->{
+        "id": _id,
+        type,
+        title,
+        slug,
+        excerpt,
+        "image": coalesce(
+          images[0].asset->url,
+          image.asset->url,
+          heroImage.asset->url
+        )
+      }
+    },
     createdAt,
     updatedAt
   }`;

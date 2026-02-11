@@ -137,6 +137,24 @@ export function Home() {
   const courses2TitleLine1 = courses2Section?.titleLine1;
   const courses2TitleLine2 = courses2Section?.titleLine2;
 
+  const toCourseCard = (item: any) => {
+    if (!item) return null;
+    if (item.link && item.image && item.title) return item;
+    const linkPrefix = item.type === 'class' ? '/clases/' : 
+                      item.type === 'workshop' ? '/workshops/' : 
+                      item.type === 'private' ? '/privada/' :
+                      '/tarjeta-regalo/';
+    return {
+      title: item.title || '',
+      subtitle: item.excerpt || '',
+      image: item.image || '',
+      link: linkPrefix + item.slug,
+    };
+  };
+
+  const coursesCards = (courses?.length ? courses : featuredCourses).map(toCourseCard).filter(Boolean);
+  const courses2Cards = (courses2?.length ? courses2 : featuredWorkshops).map(toCourseCard).filter(Boolean);
+
   // Split content by line breaks
   const contentParagraphs = aboutContent.split('\\n').filter((p: string) => p.trim());
 
@@ -225,7 +243,7 @@ export function Home() {
             </motion.div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-              {featuredCourses.map((course: any, index: number) => (
+              {coursesCards.map((course: any, index: number) => (
                 <CourseCard key={index} {...course} index={index} hideSubtitle={false} />
               ))}
             </div>
@@ -263,7 +281,7 @@ export function Home() {
             </motion.div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-              {featuredWorkshops.map((course: any, index: number) => (
+              {courses2Cards.map((course: any, index: number) => (
                 <CourseCard key={index} {...course} index={index} hideSubtitle={false} />
               ))}
             </div>
