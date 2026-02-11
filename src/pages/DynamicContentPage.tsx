@@ -91,14 +91,23 @@ export function DynamicContentPage() {
     ? 'gift-card'
     : 'workshop';
 
+  const slugAliases: Record<string, string> = {
+    iniciacion: 'clases-de-un-dia-iniciacion-en-ceramica',
+    regular: 'cursos-ceramica-barcelona-modelado',
+    torno: 'cursos-ceramica-barcelona-torno',
+    laboratorio: 'laboratorio-ceramico',
+  };
+
+  const resolvedSlug = slug && slugAliases[slug] ? slugAliases[slug] : (slug || '');
+
   // Buscar el contenido en el contexto (datos ya cargados)
   const content = type === 'class' 
-    ? getClassBySlug(slug || '')
+    ? getClassBySlug(resolvedSlug)
     : type === 'private'
-    ? getPrivateBySlug(slug || '')
+    ? getPrivateBySlug(resolvedSlug)
     : type === 'gift-card'
-    ? getGiftCardBySlug(slug || '')
-    : getWorkshopBySlug(slug || '');
+    ? getGiftCardBySlug(resolvedSlug)
+    : getWorkshopBySlug(resolvedSlug);
 
   // Control del delay antes de mostrar 404 para evitar flash durante transiciones
   useEffect(() => {

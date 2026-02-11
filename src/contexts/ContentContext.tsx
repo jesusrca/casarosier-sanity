@@ -103,6 +103,27 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const legacyClassSlugMap: Record<string, string> = {
+    'clases-de-un-dia-iniciacion-en-ceramica': 'iniciacion',
+    'cursos-ceramica-barcelona-modelado': 'regular',
+    'cursos-ceramica-barcelona-torno': 'torno',
+    'laboratorio-ceramico': 'laboratorio',
+  };
+
+  const mapClassSlugToLegacy = (slug?: string) => {
+    if (!slug) return slug;
+    return legacyClassSlugMap[slug] || slug;
+  };
+
+  const mapMenuPathToLegacy = (path?: string) => {
+    if (!path) return path;
+    return path
+      .replace('/clases/clases-de-un-dia-iniciacion-en-ceramica', '/clases/iniciacion')
+      .replace('/clases/cursos-ceramica-barcelona-modelado', '/clases/regular')
+      .replace('/clases/cursos-ceramica-barcelona-torno', '/clases/torno')
+      .replace('/clases/laboratorio-ceramico', '/clases/laboratorio');
+  };
+
   const loadAllContent = async () => {
     try {
       setError(null);
@@ -157,7 +178,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
       // Separar clases, workshops y privados
       const allItems = contentResponse || [];
-      const visibleClasses = allItems.filter((item: ContentItem) => item.type === 'class' && item.visible);
+      const visibleClasses = allItems
+        .filter((item: ContentItem) => item.type === 'class' && item.visible)
+        .map((item: ContentItem) => ({
+          ...item,
+          slug: mapClassSlugToLegacy(item.slug),
+        }));
       const visibleWorkshops = allItems.filter((item: ContentItem) => item.type === 'workshop' && item.visible);
       const visiblePrivates = allItems.filter((item: ContentItem) => item.type === 'private' && item.visible);
       const visibleGiftCards = allItems.filter((item: ContentItem) => item.type === 'gift-card' && item.visible);
@@ -171,7 +197,14 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       setBlogPosts(blogResponse || []);
 
       // Ordenar items del menú
-      const rawMenuItems = menuResponse?.items || [];
+      const rawMenuItems = (menuResponse?.items || []).map((item: MenuItem) => ({
+        ...item,
+        path: mapMenuPathToLegacy(item.path),
+        submenu: item.submenu?.map((sub) => ({
+          ...sub,
+          path: mapMenuPathToLegacy(sub.path),
+        })),
+      }));
       const sortedMenuItems = [...rawMenuItems].sort((a: MenuItem, b: MenuItem) => (a.order || 0) - (b.order || 0));
       // Ordenar submenús
       sortedMenuItems.forEach((item: MenuItem) => {
