@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
-import { menuAPI, settingsAPI } from '../utils/api';
+import { fetchMenu, fetchSettings } from '../utils/sanityQueries';
 import heroBackgroundImage from "figma:asset/cf3b622b1e53dff197470df428faee1c6f268025.png";
 import logoImage from "figma:asset/2dacc970a5a37325400c034e8aab058b32fcf649.png";
 import heroTextImage from "figma:asset/00083d30bea445cb191f41f57aa132965c193e0d.png";
@@ -63,16 +63,16 @@ export function HeroHome() {
 
   const loadHeroImages = async () => {
     try {
-      const response = await settingsAPI.getSettings();
-      if (response.settings) {
+      const response = await fetchSettings();
+      if (response) {
         // Handle both string and object formats for hero images
-        const desktopImage = typeof response.settings.heroImageDesktop === 'string' 
-          ? response.settings.heroImageDesktop 
-          : response.settings.heroImageDesktop?.url || heroBackgroundImage;
+        const desktopImage = typeof response.heroImageDesktop === 'string' 
+          ? response.heroImageDesktop 
+          : response.heroImageDesktop || heroBackgroundImage;
         
-        const mobileImage = typeof response.settings.heroImageMobile === 'string' 
-          ? response.settings.heroImageMobile 
-          : response.settings.heroImageMobile?.url || heroBackgroundImage;
+        const mobileImage = typeof response.heroImageMobile === 'string' 
+          ? response.heroImageMobile 
+          : response.heroImageMobile || heroBackgroundImage;
         
         console.log('🖼️ Hero Images loaded:', { 
           desktop: desktopImage, 
@@ -88,12 +88,12 @@ export function HeroHome() {
 
         // Load hero text images
         const textImages: string[] = [];
-        const img1 = typeof response.settings.heroTextImage1 === 'string' 
-          ? response.settings.heroTextImage1 
-          : response.settings.heroTextImage1?.url;
-        const img2 = typeof response.settings.heroTextImage2 === 'string' 
-          ? response.settings.heroTextImage2 
-          : response.settings.heroTextImage2?.url;
+        const img1 = typeof response.heroTextImage1 === 'string' 
+          ? response.heroTextImage1 
+          : response.heroTextImage1;
+        const img2 = typeof response.heroTextImage2 === 'string' 
+          ? response.heroTextImage2 
+          : response.heroTextImage2;
         
         if (img1) textImages.push(img1);
         if (img2) textImages.push(img2);
@@ -128,10 +128,10 @@ export function HeroHome() {
 
   const loadMenu = async () => {
     try {
-      const response = await menuAPI.getMenu();
-      if (response.menu?.items) {
+      const response = await fetchMenu();
+      if (response?.items) {
         // Sort items by order
-        const sortedItems = [...response.menu.items].sort((a, b) => (a.order || 0) - (b.order || 0));
+        const sortedItems = [...response.items].sort((a, b) => (a.order || 0) - (b.order || 0));
         // Sort submenu items
         sortedItems.forEach(item => {
           if (item.submenu) {

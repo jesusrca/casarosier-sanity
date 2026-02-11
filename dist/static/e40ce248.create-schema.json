@@ -1,0 +1,1059 @@
+[
+  {
+    "fields": [
+      {
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "options": {
+          "source": "title"
+        },
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "custom"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "slug",
+        "type": "slug"
+      },
+      {
+        "name": "type",
+        "type": "string"
+      },
+      {
+        "name": "subtitle",
+        "type": "string"
+      },
+      {
+        "name": "shortDescription",
+        "type": "text"
+      },
+      {
+        "name": "excerpt",
+        "type": "text"
+      },
+      {
+        "name": "description",
+        "type": "text"
+      },
+      {
+        "fields": [
+          {
+            "name": "html",
+            "type": "text"
+          },
+          {
+            "name": "additionalInfo",
+            "type": "text"
+          },
+          {
+            "name": "paymentMethods",
+            "type": "text"
+          },
+          {
+            "name": "contactPhone",
+            "type": "string"
+          },
+          {
+            "name": "contactEmail",
+            "type": "string"
+          },
+          {
+            "name": "whatYouWillLearn",
+            "type": "text"
+          },
+          {
+            "name": "whoCanParticipate",
+            "type": "text"
+          },
+          {
+            "of": [
+              {
+                "fields": [
+                  {
+                    "name": "title",
+                    "type": "string"
+                  },
+                  {
+                    "name": "description",
+                    "type": "text"
+                  }
+                ],
+                "type": "object"
+              }
+            ],
+            "name": "modules",
+            "type": "array"
+          },
+          {
+            "of": [
+              {
+                "fields": [
+                  {
+                    "name": "title",
+                    "type": "string"
+                  },
+                  {
+                    "name": "description",
+                    "type": "text"
+                  },
+                  {
+                    "name": "link",
+                    "type": "string"
+                  }
+                ],
+                "type": "object"
+              }
+            ],
+            "name": "activities",
+            "type": "array"
+          }
+        ],
+        "name": "content",
+        "type": "object"
+      },
+      {
+        "name": "price",
+        "type": "number"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "label",
+                "type": "string"
+              },
+              {
+                "name": "price",
+                "type": "number"
+              }
+            ],
+            "type": "object",
+            "name": "priceOption"
+          }
+        ],
+        "name": "priceOptions",
+        "type": "array"
+      },
+      {
+        "name": "duration",
+        "type": "string"
+      },
+      {
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "includes",
+        "type": "array"
+      },
+      {
+        "fields": [
+          {
+            "name": "description",
+            "type": "text"
+          },
+          {
+            "name": "enabled",
+            "type": "boolean"
+          },
+          {
+            "of": [
+              {
+                "fields": [
+                  {
+                    "name": "day",
+                    "type": "string"
+                  },
+                  {
+                    "of": [
+                      {
+                        "fields": [
+                          {
+                            "name": "time",
+                            "type": "string"
+                          },
+                          {
+                            "name": "availablePlaces",
+                            "type": "number"
+                          }
+                        ],
+                        "type": "object"
+                      }
+                    ],
+                    "name": "times",
+                    "type": "array"
+                  }
+                ],
+                "type": "object"
+              }
+            ],
+            "name": "slots",
+            "type": "array"
+          }
+        ],
+        "name": "schedule",
+        "type": "object"
+      },
+      {
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "menuLocations",
+        "type": "array"
+      },
+      {
+        "name": "whatsappNumber",
+        "type": "string"
+      },
+      {
+        "name": "visible",
+        "type": "boolean"
+      },
+      {
+        "name": "showInHome",
+        "type": "boolean"
+      },
+      {
+        "name": "showInHomeWorkshops",
+        "type": "boolean"
+      },
+      {
+        "name": "createdAt",
+        "type": "datetime"
+      },
+      {
+        "name": "updatedAt",
+        "type": "datetime"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "fields": [
+          {
+            "name": "alt",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          }
+        ],
+        "name": "heroImage",
+        "type": "image"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "fields": [
+          {
+            "name": "alt",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          }
+        ],
+        "name": "image",
+        "type": "image"
+      },
+      {
+        "of": [
+          {
+            "options": {
+              "hotspot": true
+            },
+            "fields": [
+              {
+                "name": "alt",
+                "type": "string"
+              },
+              {
+                "name": "caption",
+                "type": "string"
+              }
+            ],
+            "type": "image",
+            "name": "contentImage"
+          }
+        ],
+        "name": "images",
+        "type": "array"
+      },
+      {
+        "fields": [
+          {
+            "name": "metaTitle",
+            "type": "string"
+          },
+          {
+            "name": "metaDescription",
+            "type": "text"
+          },
+          {
+            "name": "keywords",
+            "type": "string"
+          }
+        ],
+        "name": "seo",
+        "type": "object"
+      }
+    ],
+    "name": "contentItem",
+    "type": "document"
+  },
+  {
+    "fields": [
+      {
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "options": {
+          "source": "title"
+        },
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "custom"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "slug",
+        "type": "slug"
+      },
+      {
+        "name": "author",
+        "type": "string"
+      },
+      {
+        "name": "content",
+        "type": "text"
+      },
+      {
+        "name": "excerpt",
+        "type": "text"
+      },
+      {
+        "name": "featured",
+        "type": "boolean"
+      },
+      {
+        "name": "published",
+        "type": "boolean"
+      },
+      {
+        "name": "createdAt",
+        "type": "datetime"
+      },
+      {
+        "name": "updatedAt",
+        "type": "datetime"
+      },
+      {
+        "fields": [
+          {
+            "name": "metaTitle",
+            "type": "string"
+          },
+          {
+            "name": "metaDescription",
+            "type": "text"
+          },
+          {
+            "name": "keywords",
+            "type": "string"
+          }
+        ],
+        "name": "seo",
+        "type": "object"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "fields": [
+          {
+            "name": "alt",
+            "type": "string"
+          }
+        ],
+        "name": "featuredImage",
+        "type": "image"
+      }
+    ],
+    "name": "blogPost",
+    "type": "document"
+  },
+  {
+    "fields": [
+      {
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "options": {
+          "source": "title"
+        },
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "custom"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "slug",
+        "type": "slug"
+      },
+      {
+        "name": "content",
+        "type": "text"
+      },
+      {
+        "name": "visible",
+        "type": "boolean"
+      },
+      {
+        "name": "deleted",
+        "type": "boolean"
+      },
+      {
+        "name": "createdAt",
+        "type": "datetime"
+      },
+      {
+        "name": "updatedAt",
+        "type": "datetime"
+      },
+      {
+        "fields": [
+          {
+            "name": "metaTitle",
+            "type": "string"
+          },
+          {
+            "name": "metaDescription",
+            "type": "text"
+          },
+          {
+            "name": "keywords",
+            "type": "string"
+          }
+        ],
+        "name": "seo",
+        "type": "object"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "fields": [
+          {
+            "name": "alt",
+            "type": "string"
+          }
+        ],
+        "name": "heroImage",
+        "type": "image"
+      }
+    ],
+    "name": "page",
+    "type": "document"
+  },
+  {
+    "fields": [
+      {
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "options": {
+          "source": "title"
+        },
+        "validation": [
+          {
+            "rules": [
+              {
+                "flag": "custom"
+              }
+            ],
+            "level": "error"
+          }
+        ],
+        "name": "slug",
+        "type": "slug"
+      },
+      {
+        "name": "visible",
+        "type": "boolean"
+      },
+      {
+        "name": "heroTitle",
+        "type": "string"
+      },
+      {
+        "name": "heroSubtitle",
+        "type": "string"
+      },
+      {
+        "name": "heroCta",
+        "type": "string"
+      },
+      {
+        "name": "heroCtaLink",
+        "type": "string"
+      },
+      {
+        "name": "valueTitle",
+        "type": "string"
+      },
+      {
+        "name": "valueSubtitle",
+        "type": "string"
+      },
+      {
+        "name": "benefitsTitle",
+        "type": "string"
+      },
+      {
+        "name": "galleryTitle",
+        "type": "string"
+      },
+      {
+        "name": "testimonialsTitle",
+        "type": "string"
+      },
+      {
+        "name": "faqTitle",
+        "type": "string"
+      },
+      {
+        "name": "finalCtaTitle",
+        "type": "string"
+      },
+      {
+        "name": "finalCtaSubtitle",
+        "type": "string"
+      },
+      {
+        "name": "finalCtaButton",
+        "type": "string"
+      },
+      {
+        "name": "finalCtaLink",
+        "type": "string"
+      },
+      {
+        "name": "contactFormTitle",
+        "type": "string"
+      },
+      {
+        "name": "contactFormSubtitle",
+        "type": "string"
+      },
+      {
+        "name": "showContactForm",
+        "type": "boolean"
+      },
+      {
+        "name": "showContactInfo",
+        "type": "boolean"
+      },
+      {
+        "name": "contactEmail",
+        "type": "string"
+      },
+      {
+        "name": "contactPhone",
+        "type": "string"
+      },
+      {
+        "name": "contactHours",
+        "type": "string"
+      },
+      {
+        "name": "contactAddress",
+        "type": "string"
+      },
+      {
+        "fields": [
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "text"
+          },
+          {
+            "name": "keywords",
+            "type": "string"
+          },
+          {
+            "name": "ogImage",
+            "type": "string"
+          }
+        ],
+        "name": "seo",
+        "type": "object"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "heroImage",
+        "type": "image"
+      },
+      {
+        "of": [
+          {
+            "options": {
+              "hotspot": true
+            },
+            "type": "image"
+          }
+        ],
+        "name": "galleryImages",
+        "type": "array"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "title",
+                "type": "string"
+              },
+              {
+                "name": "description",
+                "type": "string"
+              }
+            ],
+            "type": "object",
+            "name": "benefit"
+          }
+        ],
+        "name": "benefits",
+        "type": "array"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "icon",
+                "type": "string"
+              },
+              {
+                "name": "title",
+                "type": "string"
+              },
+              {
+                "name": "description",
+                "type": "string"
+              }
+            ],
+            "type": "object",
+            "name": "valuePoint"
+          }
+        ],
+        "name": "valuePoints",
+        "type": "array"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "role",
+                "type": "string"
+              },
+              {
+                "name": "text",
+                "type": "text"
+              },
+              {
+                "name": "rating",
+                "type": "number"
+              }
+            ],
+            "type": "object",
+            "name": "testimonial"
+          }
+        ],
+        "name": "testimonials",
+        "type": "array"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "question",
+                "type": "string"
+              },
+              {
+                "name": "answer",
+                "type": "text"
+              }
+            ],
+            "type": "object",
+            "name": "faq"
+          }
+        ],
+        "name": "faqs",
+        "type": "array"
+      }
+    ],
+    "name": "landingPage",
+    "type": "document"
+  },
+  {
+    "fields": [
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "path",
+                "type": "string"
+              },
+              {
+                "name": "order",
+                "type": "number"
+              },
+              {
+                "of": [
+                  {
+                    "fields": [
+                      {
+                        "name": "name",
+                        "type": "string"
+                      },
+                      {
+                        "name": "path",
+                        "type": "string"
+                      },
+                      {
+                        "name": "order",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "object",
+                    "name": "submenuItem"
+                  }
+                ],
+                "name": "submenu",
+                "type": "array"
+              }
+            ],
+            "type": "object",
+            "name": "menuItem"
+          }
+        ],
+        "name": "items",
+        "type": "array"
+      }
+    ],
+    "name": "siteMenu",
+    "type": "document"
+  },
+  {
+    "fields": [
+      {
+        "name": "siteName",
+        "type": "string"
+      },
+      {
+        "name": "siteDescription",
+        "type": "text"
+      },
+      {
+        "name": "seoTitle",
+        "type": "string"
+      },
+      {
+        "name": "seoDescription",
+        "type": "text"
+      },
+      {
+        "name": "seoKeywords",
+        "type": "string"
+      },
+      {
+        "name": "ogUrl",
+        "type": "string"
+      },
+      {
+        "name": "ogType",
+        "type": "string"
+      },
+      {
+        "name": "ogTitle",
+        "type": "string"
+      },
+      {
+        "name": "ogDescription",
+        "type": "text"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "ogImage",
+        "type": "image"
+      },
+      {
+        "name": "contactEmail",
+        "type": "string"
+      },
+      {
+        "name": "contactEmail2",
+        "type": "string"
+      },
+      {
+        "name": "contactPhone",
+        "type": "string"
+      },
+      {
+        "name": "whatsappNumber",
+        "type": "string"
+      },
+      {
+        "name": "instagramTitle",
+        "type": "string"
+      },
+      {
+        "name": "instagramHandle",
+        "type": "string"
+      },
+      {
+        "name": "instagramLink",
+        "type": "string"
+      },
+      {
+        "name": "googleAnalyticsId",
+        "type": "string"
+      },
+      {
+        "name": "homeCoursesDescription",
+        "type": "text"
+      },
+      {
+        "name": "homeWorkshopsDescription",
+        "type": "text"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "fields": [
+          {
+            "name": "alt",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          }
+        ],
+        "name": "heroImageDesktop",
+        "type": "image"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "fields": [
+          {
+            "name": "alt",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          }
+        ],
+        "name": "heroImageMobile",
+        "type": "image"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "heroTextImage1",
+        "type": "image"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "heroTextImage2",
+        "type": "image"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "blogHeroImage",
+        "type": "image"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "blogTitleImage",
+        "type": "image"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "clasesHeroTitleImage",
+        "type": "image"
+      },
+      {
+        "of": [
+          {
+            "to": [
+              {
+                "type": "instagramPost"
+              }
+            ],
+            "type": "reference",
+            "title": "Reference to instagram post"
+          }
+        ],
+        "name": "instagramImages",
+        "type": "array"
+      },
+      {
+        "fields": [
+          {
+            "name": "transferencia",
+            "type": "boolean"
+          },
+          {
+            "name": "paypal",
+            "type": "boolean"
+          },
+          {
+            "name": "tarjeta",
+            "type": "boolean"
+          },
+          {
+            "name": "efectivo",
+            "type": "boolean"
+          },
+          {
+            "name": "bizum",
+            "type": "boolean"
+          }
+        ],
+        "name": "paymentMethods",
+        "type": "object"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "from",
+                "type": "string"
+              },
+              {
+                "name": "to",
+                "type": "string"
+              },
+              {
+                "name": "type",
+                "type": "string"
+              }
+            ],
+            "type": "object",
+            "name": "redirect"
+          }
+        ],
+        "name": "redirects",
+        "type": "array"
+      },
+      {
+        "of": [
+          {
+            "to": [
+              {
+                "type": "landingPage"
+              }
+            ],
+            "type": "reference",
+            "title": "Reference to landing page"
+          }
+        ],
+        "name": "landingPages",
+        "type": "array"
+      }
+    ],
+    "name": "siteSettings",
+    "type": "document"
+  },
+  {
+    "fields": [
+      {
+        "name": "date",
+        "type": "string"
+      },
+      {
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "name": "description",
+        "type": "text"
+      },
+      {
+        "name": "link",
+        "type": "string"
+      },
+      {
+        "name": "source",
+        "type": "string"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "image",
+        "type": "image"
+      }
+    ],
+    "name": "instagramPost",
+    "type": "document"
+  }
+]

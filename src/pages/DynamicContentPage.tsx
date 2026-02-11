@@ -10,7 +10,6 @@ import { AccordionSection } from '../components/AccordionSection';
 import { Hero } from '../components/Hero';
 import { PageSkeleton } from '../components/PageSkeleton';
 import { LoadingScreen } from '../components/LoadingScreen';
-import { settingsAPI } from '../utils/api';
 
 interface ContentItem {
   id: string;
@@ -80,21 +79,7 @@ export function DynamicContentPage() {
   const { getClassBySlug, getWorkshopBySlug, getPrivateBySlug, getGiftCardBySlug, loading: contentLoading, settings } = useContent();
   const { setPhoneNumber } = useWhatsApp();
   const [images, setImages] = useState<string[]>([]);
-  const [siteSettings, setSiteSettings] = useState<any>(null);
   const [showNotFound, setShowNotFound] = useState(false);
-
-  // Load site settings for payment methods
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const response = await settingsAPI.getSettings();
-        setSiteSettings(response.settings);
-      } catch (error) {
-        console.error('Error loading settings:', error);
-      }
-    };
-    loadSettings();
-  }, []);
 
   // Detectar tipo basado en la URL actual
   const currentPath = window.location.pathname;
@@ -456,49 +441,49 @@ export function DynamicContentPage() {
                       <p className="text-base text-foreground/80">
                         {content.content.paymentMethods}
                       </p>
-                      {siteSettings?.paymentMethods && Object.values(siteSettings.paymentMethods).some((enabled: any) => enabled) && (
+                      {settings?.paymentMethods && Object.values(settings.paymentMethods).some((enabled: any) => enabled) && (
                         <div className="flex flex-wrap gap-3 items-center">
-                          {siteSettings.paymentMethods.transferencia && (
+                          {settings.paymentMethods.transferencia && (
                             <>
                               <span className="text-sm text-foreground/60 border-b border-foreground/20 pb-1">
                                 Transferencia bancaria
                               </span>
-                              {(siteSettings.paymentMethods.paypal || siteSettings.paymentMethods.tarjeta || siteSettings.paymentMethods.efectivo || siteSettings.paymentMethods.bizum) && (
+                              {(settings.paymentMethods.paypal || settings.paymentMethods.tarjeta || settings.paymentMethods.efectivo || settings.paymentMethods.bizum) && (
                                 <span className="text-foreground/20">·</span>
                               )}
                             </>
                           )}
-                          {siteSettings.paymentMethods.paypal && (
+                          {settings.paymentMethods.paypal && (
                             <>
                               <span className="text-sm text-foreground/60 border-b border-foreground/20 pb-1">
                                 PayPal
                               </span>
-                              {(siteSettings.paymentMethods.tarjeta || siteSettings.paymentMethods.efectivo || siteSettings.paymentMethods.bizum) && (
+                              {(settings.paymentMethods.tarjeta || settings.paymentMethods.efectivo || settings.paymentMethods.bizum) && (
                                 <span className="text-foreground/20">·</span>
                               )}
                             </>
                           )}
-                          {siteSettings.paymentMethods.tarjeta && (
+                          {settings.paymentMethods.tarjeta && (
                             <>
                               <span className="text-sm text-foreground/60 border-b border-foreground/20 pb-1">
                                 Tarjeta de crédito
                               </span>
-                              {(siteSettings.paymentMethods.efectivo || siteSettings.paymentMethods.bizum) && (
+                              {(settings.paymentMethods.efectivo || settings.paymentMethods.bizum) && (
                                 <span className="text-foreground/20">·</span>
                               )}
                             </>
                           )}
-                          {siteSettings.paymentMethods.efectivo && (
+                          {settings.paymentMethods.efectivo && (
                             <>
                               <span className="text-sm text-foreground/60 border-b border-foreground/20 pb-1">
                                 Efectivo
                               </span>
-                              {siteSettings.paymentMethods.bizum && (
+                              {settings.paymentMethods.bizum && (
                                 <span className="text-foreground/20">·</span>
                               )}
                             </>
                           )}
-                          {siteSettings.paymentMethods.bizum && (
+                          {settings.paymentMethods.bizum && (
                             <span className="text-sm text-foreground/60 border-b border-foreground/20 pb-1">
                               Bizum
                             </span>

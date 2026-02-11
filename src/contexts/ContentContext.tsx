@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { contentAPI, blogAPI, menuAPI, settingsAPI, pagesAPI } from '../utils/api';
-import { LoadingScreen } from '../components/LoadingScreen';
+import { fetchBlogPosts, fetchContentItems, fetchMenu, fetchPages, fetchSettings } from '../utils/sanityQueries';
 
 interface ContentItem {
   id: string;
@@ -13,7 +12,7 @@ interface ContentItem {
   price?: number;
   duration?: string;
   includes?: string[];
-  images?: string[];
+  images?: Array<string | { url: string; alt?: string; caption?: string }>;
   schedule?: any;
   content?: any;
   visible: boolean;
@@ -117,36 +116,34 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
       // Cargar todo en paralelo para máxima velocidad
       const loadPromise = Promise.all([
-        contentAPI.getAllItems().catch((err) => {
+        fetchContentItems().catch((err) => {
           console.warn('⚠️ Error loading content items:', err);
+          return [];
+        }),
+        fetchBlogPosts(true).catch((err) => {
+          console.warn('⚠️ Error loading blog posts:', err);
+          return [];
+        }),
+        fetchMenu().catch((err) => {
+          console.warn('⚠️ Error loading menu:', err);
           return { items: [] };
         }),
-        blogAPI.getPosts(true).catch((err) => {
-          console.warn('⚠️ Error loading blog posts:', err);
-          return { posts: [] };
-        }),
-        menuAPI.getMenu().catch((err) => {
-          console.warn('⚠️ Error loading menu:', err);
-          return { menu: { items: [] } };
-        }),
-        settingsAPI.getSettings().catch((err) => {
+        fetchSettings().catch((err) => {
           console.warn('⚠️ Error loading settings:', err);
-          return { 
-            settings: {
-              siteName: 'Casa Rosier',
-              siteDescription: 'Taller de cerámica en Barcelona',
-              seoTitle: 'Casa Rosier - Taller de Cerámica en Barcelona',
-              seoDescription: 'Descubre la cerámica en Casa Rosier. Clases, workshops y espacios para eventos en Barcelona.',
-              seoKeywords: 'cerámica, Barcelona, taller, clases, workshops, torno',
-              ogImage: '',
-              contactEmail: 'info@casarosierceramica.com',
-              contactPhone: '+34 633788860',
-            }
+          return {
+            siteName: 'Casa Rosier',
+            siteDescription: 'Taller de cerámica en Barcelona',
+            seoTitle: 'Casa Rosier - Taller de Cerámica en Barcelona',
+            seoDescription: 'Descubre la cerámica en Casa Rosier. Clases, workshops y espacios para eventos en Barcelona.',
+            seoKeywords: 'cerámica, Barcelona, taller, clases, workshops, torno',
+            ogImage: '',
+            contactEmail: 'info@casarosierceramica.com',
+            contactPhone: '+34 633788860',
           };
         }),
-        pagesAPI.getAllPages().catch((err) => {
+        fetchPages().catch((err) => {
           console.warn('⚠️ Error loading pages:', err);
-          return { pages: [] };
+          return [];
         })
       ]);
 
@@ -159,7 +156,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       ] = await Promise.race([loadPromise, timeoutPromise]) as any;
 
       // Separar clases, workshops y privados
-      const allItems = contentResponse.items || [];
+      const allItems = contentResponse || [];
       const visibleClasses = allItems.filter((item: ContentItem) => item.type === 'class' && item.visible);
       const visibleWorkshops = allItems.filter((item: ContentItem) => item.type === 'workshop' && item.visible);
       const visiblePrivates = allItems.filter((item: ContentItem) => item.type === 'private' && item.visible);
@@ -171,10 +168,10 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       setGiftCards(visibleGiftCards);
       
       // Guardar el resto del contenido
-      setBlogPosts(blogResponse.posts || []);
+      setBlogPosts(blogResponse || []);
 
       // Ordenar items del menú
-      const rawMenuItems = menuResponse.menu?.items || [];
+      const rawMenuItems = menuResponse?.items || [];
       const sortedMenuItems = [...rawMenuItems].sort((a: MenuItem, b: MenuItem) => (a.order || 0) - (b.order || 0));
       // Ordenar submenús
       sortedMenuItems.forEach((item: MenuItem) => {
@@ -184,8 +181,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       });
       setMenuItems(sortedMenuItems);
 
-      setPages((pagesResponse.pages || []).filter((page: Page) => page.visible));
-      setSettings(settingsResponse.settings || {});
+      setPages((pagesResponse || []).filter((page: Page) => page.visible));
+      setSettings(settingsResponse || {});
       
       console.log('✅ Contenido cargado en memoria:', {
         clases: visibleClasses.length,

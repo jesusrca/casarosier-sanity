@@ -8,7 +8,7 @@ import { NotFound } from './NotFound';
 import { PageSection } from '../components/PageSection';
 import { LoadingScreen } from '../components/LoadingScreen';
 import { Navigation } from '../components/Navigation';
-import { landingPagesAPI } from '../utils/landingPagesApi';
+import { fetchLandingPage } from '../utils/sanityQueries';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 
@@ -38,9 +38,8 @@ export function DynamicPage() {
   useEffect(() => {
     const checkLandingPage = async () => {
       try {
-        const data = await landingPagesAPI.getLandingPage(slug!);
-        if (data?.landingPage && data.landingPage.visible) {
-          const lp = data.landingPage;
+        const lp = await fetchLandingPage(slug!);
+        if (lp && lp.visible) {
           
           // Transformar los campos hero en una sección si existen
           let transformedSections = [...(lp.sections || [])];

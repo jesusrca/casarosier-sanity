@@ -3,13 +3,12 @@ import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from 'sonner@2.0.3';
 import { AnimatePresence } from 'motion/react';
 import { lazy, Suspense } from 'react';
-import { AuthProvider } from './contexts/AuthContext';
+// Admin/auth removed (Sanity handles content)
 import { ContentProvider, useContent } from './contexts/ContentContext';
 import { WhatsAppProvider, useWhatsApp } from './contexts/WhatsAppContext';
 import { ScrollHeader } from './components/ScrollHeader';
 import { Footer } from './components/Footer';
 import { ScrollToTop } from './components/ScrollToTop';
-import { AuthErrorHandler } from './components/AuthErrorHandler';
 import { WhatsAppButton } from './components/WhatsAppButton';
 import { GoogleAnalytics } from './components/GoogleAnalytics';
 import { RedirectManager } from './components/RedirectManager';
@@ -29,22 +28,19 @@ const DynamicContentPage = lazy(() => import('./pages/DynamicContentPage').then(
 const DynamicPage = lazy(() => import('./pages/DynamicPage').then(module => ({ default: module.DynamicPage })));
 const NotFound = lazy(() => import('./pages/NotFound').then(module => ({ default: module.NotFound })));
 
-// Admin pages (lazy loaded)
-const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
-const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+// Admin pages disabled (managed in Sanity)
 
 function AppContent() {
   const location = useLocation();
   const { settings } = useContent();
   const { phoneNumber } = useWhatsApp();
-  const isAdminRoute = location.pathname.startsWith('/admin');
+  const isAdminRoute = false;
 
   // Usar el número específico de la página actual, o el global, o el fallback
   const whatsappNumber = phoneNumber || settings.whatsappNumber;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <AuthErrorHandler />
       <ScrollToTop />
       {settings.googleAnalyticsId && <GoogleAnalytics trackingId={settings.googleAnalyticsId} />}
       {settings.redirects && <RedirectManager redirects={settings.redirects} />}
@@ -70,10 +66,6 @@ function AppContent() {
               {/* Página de Tarjeta de Regalo */}
               <Route path="/tarjeta-regalo/:slug" element={<PageTransition><DynamicContentPage /></PageTransition>} />
               
-              {/* Admin Routes */}
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin/dashboard/*" element={<AdminDashboard />} /> 
-              
               {/* Dynamic custom pages - antes del 404 */}
               <Route path="/:slug" element={<PageTransition><DynamicPage /></PageTransition>} />
               
@@ -92,20 +84,18 @@ function App() {
   return (
     <HelmetProvider>
       <Router>
-        <AuthProvider>
-          <ContentProvider>
-            <WhatsAppProvider>
-              <NetworkStatus />
-              <Toaster 
-                position="top-right" 
-                expand={false}
-                richColors
-                closeButton
-              />
-              <AppContent />
-            </WhatsAppProvider>
-          </ContentProvider>
-        </AuthProvider>
+        <ContentProvider>
+          <WhatsAppProvider>
+            <NetworkStatus />
+            <Toaster 
+              position="top-right" 
+              expand={false}
+              richColors
+              closeButton
+            />
+            <AppContent />
+          </WhatsAppProvider>
+        </ContentProvider>
       </Router>
     </HelmetProvider>
   );

@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Instagram, Mail, Phone, Facebook } from 'lucide-react';
-import { settingsAPI, messagesAPI } from '../utils/api';
-import { landingPagesAPI } from '../utils/landingPagesApi';
+import { fetchSettings } from '../utils/sanityQueries';
 import { InstagramCarousel } from './InstagramCarousel';
 import { Logo } from './Logo';
 
@@ -15,31 +14,18 @@ export function Footer() {
   const [error, setError] = useState('');
   const [successTimeoutId, setSuccessTimeoutId] = useState<number | null>(null);
   const [settings, setSettings] = useState<any>({});
-  const [landingPages, setLandingPages] = useState<any[]>([]);
 
   useEffect(() => {
     loadSettings();
-    loadLandingPages();
+    // Landing pages are handled via Sanity (not needed in footer for now)
   }, []);
 
   const loadSettings = async () => {
     try {
-      const response = await settingsAPI.getSettings();
-      setSettings(response.settings);
+      const response = await fetchSettings();
+      setSettings(response || {});
     } catch (error) {
       console.error('Error loading settings:', error);
-    }
-  };
-
-  const loadLandingPages = async () => {
-    try {
-      const response = await landingPagesAPI.getPublishedLandingPages();
-      console.log('📍 Footer - Landing pages received:', response);
-      console.log('📍 Footer - Landing pages array:', response.landingPages);
-      setLandingPages(response.landingPages || []);
-    } catch (error) {
-      // Silently fail if error occurs
-      console.error('Error loading landing pages:', error);
     }
   };
 
@@ -66,8 +52,13 @@ export function Footer() {
         message: formData.get('message') as string,
       };
 
-      await messagesAPI.sendMessage(messageData);
-      
+      const targetEmail = settings.contactEmail || 'info@casarosierceramica.com';
+      const subject = encodeURIComponent(messageData.subject || 'Consulta desde la web');
+      const body = encodeURIComponent(
+        `Nombre: ${messageData.name}\nEmail: ${messageData.email}\nTeléfono: ${messageData.phone}\n\nMensaje:\n${messageData.message}`
+      );
+      window.location.href = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
+
       setSuccess(true);
       setError('');
       e.currentTarget.reset();
@@ -228,24 +219,9 @@ export function Footer() {
             <div className="pt-6 border-t border-foreground/10">
               {/* Landing Pages y Administración en la misma línea */}
               <div className="flex flex-wrap items-center gap-2">
-                <Link
-                  to="/admin/login"
-                  className="text-xs text-foreground/40 hover:text-primary transition-colors"
-                >
-                  Administración
-                </Link>
-                
-                {landingPages.length > 0 && landingPages.map((page) => (
-                  <span key={page.id} className="contents">
-                    <span className="text-xs text-foreground/20">·</span>
-                    <Link
-                      to={`/${page.slug}`}
-                      className="text-xs text-foreground/40 hover:text-primary transition-colors"
-                    >
-                      {page.title}
-                    </Link>
-                  </span>
-                ))}
+                <span className="text-xs text-foreground/40">
+                  Contenido administrado en Sanity
+                </span>
               </div>
             </div>
           </div>

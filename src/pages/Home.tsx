@@ -4,22 +4,25 @@ import { useState, useEffect } from 'react';
 import { HeroHome } from '../components/HeroHome';
 import { CourseCard } from '../components/CourseCard';
 import { ClickableBanner } from '../components/ClickableBanner';
-import { pagesAPI } from '../utils/api';
 import { useContent } from '../contexts/ContentContext';
 import logoImage from "figma:asset/28612bd890b3dcd85d8f93665d63bdc17b7bfea3.png";
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { SEOHead } from '../components/SEOHead';
 
 export function Home() {
-  const { classes, workshops, settings } = useContent(); // Usar el contexto de contenido
+  const { classes, workshops, settings, pages } = useContent(); // Usar el contexto de contenido
   const [pageData, setPageData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [featuredCourses, setFeaturedCourses] = useState<any[]>([]);
   const [featuredWorkshops, setFeaturedWorkshops] = useState<any[]>([]);
 
   useEffect(() => {
-    loadPageData();
-  }, []);
+    const homePage = pages.find((page: any) => page.slug === 'home');
+    if (homePage) {
+      setPageData(homePage);
+    }
+    setLoading(false);
+  }, [pages]);
 
   // Recargar cursos destacados cuando cambien las clases/workshops del contexto
   useEffect(() => {
@@ -27,19 +30,7 @@ export function Home() {
     loadFeaturedWorkshops();
   }, [classes, workshops]);
 
-  const loadPageData = async () => {
-    try {
-      const response = await pagesAPI.getPage('home');
-      if (response.page) {
-        setPageData(response.page);
-      }
-    } catch (error) {
-      // If page doesn't exist yet, just use default content
-      console.log('Using default home content');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Home page data is loaded from Sanity via ContentContext
 
   const loadFeaturedCourses = async () => {
     try {

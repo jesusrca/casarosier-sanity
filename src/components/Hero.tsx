@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { ChevronDown, Menu, X, Plus } from 'lucide-react';
 import { useContent } from '../contexts/ContentContext';
 import { Logo } from './Logo';
-import { settingsAPI } from '../utils/api';
+import { fetchSettings } from '../utils/sanityQueries';
 import heroTextImage from "figma:asset/00083d30bea445cb191f41f57aa132965c193e0d.png";
 import heroBackgroundImage from "figma:asset/cf3b622b1e53dff197470df428faee1c6f268025.png";
 
@@ -62,18 +62,18 @@ export function Hero({ backgroundImage, title, subtitle, showScrollIndicator = t
 
       // Solo si NO hay backgroundImage, cargar de settings
       try {
-        const response = await settingsAPI.getSettings();
-        if (response.settings) {
+        const response = await fetchSettings();
+        if (response) {
           const isMobile = window.innerWidth < 768;
           
           // Usar imagen mobile o desktop según el tamaño de pantalla
           const settingsImage = isMobile 
-            ? (typeof response.settings.heroImageMobile === 'string' 
-                ? response.settings.heroImageMobile 
-                : response.settings.heroImageMobile?.url)
-            : (typeof response.settings.heroImageDesktop === 'string' 
-                ? response.settings.heroImageDesktop 
-                : response.settings.heroImageDesktop?.url);
+            ? (typeof response.heroImageMobile === 'string' 
+                ? response.heroImageMobile 
+                : response.heroImageMobile)
+            : (typeof response.heroImageDesktop === 'string' 
+                ? response.heroImageDesktop 
+                : response.heroImageDesktop);
           
           if (settingsImage) {
             console.log('🖼️ Hero cargando imagen desde ajustes:', settingsImage);
