@@ -119,7 +119,7 @@ export function Home() {
   const aboutImages = aboutSection?.images || [];
   const aboutContent = aboutSection?.content || 'Ya sea en clases mensuales o en talleres intensivos de fin de semana, te acompañaremos para que descubras todas las posibilidades del barro.\\n\\nTambién puedes crear un evento privado totalmente personalizado.';
   // Eliminar fallback - solo usar imagen del administrador o placeholder
-  const aboutMainImage = aboutSection?.mainImage || '';
+  const aboutMainImage = aboutSection?.mainImageUrl || aboutSection?.mainImage || '';
   
   // Debug: ver qué imagen tenemos
   console.log('🖼️ About Main Image:', aboutMainImage);
