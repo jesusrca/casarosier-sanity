@@ -85,6 +85,8 @@ export const siteSettings = defineType({
       name: 'instagramImages',
       type: 'array',
       of: [{ type: 'reference', to: [{ type: 'instagramPost' }] }],
+      hidden: true,
+      description: 'Deprecated: el carrusel toma los items directamente de Instagram Post (orden y ocultar se manejan allí).',
     }),
     defineField({
       name: 'paymentMethods',

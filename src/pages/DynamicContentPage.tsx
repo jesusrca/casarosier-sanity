@@ -92,10 +92,11 @@ export function DynamicContentPage() {
     : 'workshop';
 
   const slugAliases: Record<string, string> = {
-    iniciacion: 'clases-de-un-dia-iniciacion-en-ceramica',
-    regular: 'cursos-ceramica-barcelona-modelado',
-    torno: 'cursos-ceramica-barcelona-torno',
-    laboratorio: 'laboratorio-ceramico',
+    // Accept legacy long slugs and normalize to the short slugs used in ContentContext.
+    'clases-de-un-dia-iniciacion-en-ceramica': 'iniciacion',
+    'cursos-ceramica-barcelona-modelado': 'regular',
+    'cursos-ceramica-barcelona-torno': 'torno',
+    'laboratorio-ceramico': 'laboratorio',
   };
 
   const resolvedSlug = slug && slugAliases[slug] ? slugAliases[slug] : (slug || '');

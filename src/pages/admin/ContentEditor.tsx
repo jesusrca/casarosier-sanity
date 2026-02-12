@@ -400,23 +400,21 @@ export function ContentEditor({ item: initialItem, onSave, onCancel, onDelete }:
 
                     <div>
                       <label className="block text-sm mb-2">Descripción corta (resaltada)</label>
-                      <textarea
+                      <RichTextEditor
                         value={item.shortDescription || ''}
-                        onChange={(e) => updateField('shortDescription', e.target.value)}
-                        rows={2}
+                        onChange={(value) => updateField('shortDescription', value)}
                         placeholder="Texto destacado que aparece justo después del título"
-                        className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        height="160px"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm mb-2">Extracto para Home</label>
-                      <textarea
+                      <RichTextEditor
                         value={item.excerpt || ''}
-                        onChange={(e) => updateField('excerpt', e.target.value)}
-                        rows={3}
+                        onChange={(value) => updateField('excerpt', value)}
                         placeholder="Descripción breve que aparecerá en la tarjeta del Home (recomendado: 2-3 líneas)"
-                        className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        height="180px"
                       />
                       <p className="text-xs text-foreground/60 mt-1">
                         Este texto aparecerá en la tarjeta de la clase/workshop cuando se muestre en la página de inicio

@@ -28,7 +28,6 @@ export const page = defineType({
       readOnly: true,
       options: { source: 'title' },
     }),
-    defineField({ name: 'content', type: 'text' }),
     defineField({
       name: 'sections',
       type: 'array',
@@ -114,8 +113,6 @@ export const page = defineType({
         }),
       ],
     }),
-    defineField({ name: 'createdAt', type: 'datetime' }),
-    defineField({ name: 'updatedAt', type: 'datetime' }),
     defineField({
       name: 'seo',
       type: 'object',
@@ -124,12 +121,6 @@ export const page = defineType({
         defineField({ name: 'metaDescription', type: 'text' }),
         defineField({ name: 'keywords', type: 'string' }),
       ],
-    }),
-    defineField({
-      name: 'heroImage',
-      type: 'image',
-      options: { hotspot: true },
-      fields: [defineField({ name: 'alt', type: 'string' })],
     }),
     // Home-only hero controls live on the Home page document, not global settings.
     defineField({

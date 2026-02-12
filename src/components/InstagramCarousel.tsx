@@ -7,6 +7,8 @@ import Slider from 'react-slick';
 
 export interface InstagramImageData {
   url: string;
+  // Backwards compatibility: older payloads used `image` instead of `url`.
+  image?: string;
   title?: string;
   description?: string;
   source?: string;
@@ -41,10 +43,21 @@ export function InstagramCarousel({
     { url: 'https://images.unsplash.com/photo-1691071096270-ef5b34e0ed06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwb3R0ZXJ5JTIwd29ya3Nob3AlMjBpbnRlcmlvciUyMHNwYWNlfGVufDF8fHx8MTY1MjE4MTEzfDA&ixlib=rb-4.1.0&q=80&w=1080' }
   ];
 
-  // Normalize images to InstagramImageData format
-  const normalizedImages: InstagramImageData[] = (images && images.length > 0 ? images : defaultImages).map(img => 
-    typeof img === 'string' ? { url: img } : img
-  );
+  // Normalize images to InstagramImageData format.
+  // Handles:
+  // - strings: "https://..."
+  // - objects: { url, ...meta }
+  // - legacy objects: { image, ...meta }
+  // - nulls (broken references)
+  const normalizedImages: InstagramImageData[] = (images && images.length > 0 ? images : defaultImages)
+    .map((img) => {
+      if (!img) return null;
+      if (typeof img === 'string') return { url: img };
+      const anyImg = img as any;
+      const url = anyImg.url || anyImg.image;
+      return url ? { ...anyImg, url } : null;
+    })
+    .filter((img): img is InstagramImageData => Boolean(img?.url));
 
   const handleImageClick = (index: number) => {
     setCurrentImageIndex(index);

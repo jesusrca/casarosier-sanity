@@ -12,6 +12,7 @@ export const deskStructure = (S: StructureBuilder) =>
             .documentId('page-home')
         ),
       S.divider(),
+      S.documentTypeListItem('page').title('Pages'),
       S.documentTypeListItem('curso').title('Cursos'),
       S.documentTypeListItem('blogPost').title('Blog Post'),
       S.documentTypeListItem('landingPage').title('Landing Page'),

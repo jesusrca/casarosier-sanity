@@ -49,10 +49,13 @@ interface MenuItem {
 interface Page {
   slug: string;
   title: string;
-  content: any;
+  sections?: any[];
   visible: boolean;
   seo?: any;
-  heroImage?: string;
+  heroImageDesktop?: string;
+  heroImageMobile?: string;
+  heroTextImage1?: string;
+  heroTextImage2?: string;
 }
 
 interface SiteSettings {
@@ -62,6 +65,10 @@ interface SiteSettings {
   contactPhone?: string;
   socialMedia?: any;
   seo?: any;
+  instagramImages?: any[];
+  instagramTitle?: string;
+  instagramHandle?: string;
+  instagramLink?: string;
 }
 
 interface ContentContextType {
@@ -224,7 +231,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         giftCards: visibleGiftCards.length,
         posts: (blogResponse.posts || []).length,
         páginas: (pagesResponse.pages || []).filter((page: Page) => page.visible).length,
-        menuItems: sortedMenuItems.length
+        menuItems: sortedMenuItems.length,
+        instagramImages: Array.isArray(settingsResponse?.instagramImages) ? settingsResponse.instagramImages.length : 0,
       });
     } catch (err) {
       console.error('❌ Error cargando contenido:', err);
@@ -321,6 +329,30 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 export function useContent() {
   const context = useContext(ContentContext);
   if (context === undefined) {
+    // In dev, fast refresh can temporarily evaluate hooks before the Provider is re-mounted.
+    // Returning a safe fallback prevents the whole app from crashing during HMR.
+    if (import.meta.env?.DEV) {
+      console.error('useContent must be used within a ContentProvider (HMR fallback active)');
+      return {
+        classes: [],
+        workshops: [],
+        privates: [],
+        giftCards: [],
+        blogPosts: [],
+        menuItems: [],
+        pages: [],
+        settings: {},
+        loading: true,
+        error: 'ContentProvider not mounted',
+        getClassBySlug: () => undefined,
+        getWorkshopBySlug: () => undefined,
+        getPrivateBySlug: () => undefined,
+        getGiftCardBySlug: () => undefined,
+        getBlogPostBySlug: () => undefined,
+        getPageBySlug: () => undefined,
+        refreshContent: async () => {},
+      };
+    }
     throw new Error('useContent must be used within a ContentProvider');
   }
   return context;

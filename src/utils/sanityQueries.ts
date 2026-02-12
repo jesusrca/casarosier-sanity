@@ -5,7 +5,7 @@ export async function fetchContentItems() {
     "id": _id,
     type,
     title,
-    slug,
+    "slug": slug.current,
     subtitle,
     shortDescription,
     description,
@@ -38,7 +38,7 @@ export async function fetchBlogPosts(publishedOnly = false) {
   const filter = publishedOnly ? ' && published == true' : '';
   const query = `*[_type == "blogPost"${filter}]|order(createdAt desc){
     "id": _id,
-    slug,
+    "slug": slug.current,
     title,
     content,
     excerpt,
@@ -89,13 +89,14 @@ export async function fetchSettings() {
     "blogHeroImage": blogHeroImage.asset->url,
     "blogTitleImage": blogTitleImage.asset->url,
     "clasesHeroTitleImage": clasesHeroTitleImage.asset->url,
-    instagramImages[]->{
+    "instagramImages": *[_type == "instagramPost" && hidden != true] | order(order asc, date desc)[0...12]{
+      order,
       date,
       title,
       description,
       link,
       source,
-      "image": image.asset->url
+      "url": image.asset->url
     }
   }`;
   return sanityFetch<any>(query);
@@ -106,9 +107,7 @@ export async function fetchPages() {
     "id": _id,
     "slug": slug.current,
     title,
-    content,
     seo,
-    "heroImage": heroImage.asset->url,
     "heroImageDesktop": heroImageDesktop.asset->url,
     "heroImageMobile": heroImageMobile.asset->url,
     "heroTextImage1": heroTextImage1.asset->url,
@@ -133,8 +132,6 @@ export async function fetchPages() {
         )
       }
     },
-    createdAt,
-    updatedAt
   }`;
   return sanityFetch<any[]>(query);
 }

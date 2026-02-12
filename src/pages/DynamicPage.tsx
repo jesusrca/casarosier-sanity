@@ -9,16 +9,12 @@ import { PageSection } from '../components/PageSection';
 import { LoadingScreen } from '../components/LoadingScreen';
 import { Navigation } from '../components/Navigation';
 import { fetchLandingPage } from '../utils/sanityQueries';
-import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
 
 interface Page {
   id: string;
   title: string;
   slug: string;
-  content?: string;
   sections?: any[];
-  heroImage?: string;
   visible: boolean;
   seo?: {
     metaTitle?: string;
@@ -169,7 +165,7 @@ export function DynamicPage() {
           title={page.seo?.metaTitle || page.title}
           description={page.seo?.metaDescription}
           keywords={Array.isArray(page.seo?.keywords) ? page.seo?.keywords.join(', ') : page.seo?.keywords}
-          image={page.heroImage || heroSection?.image}
+          image={heroSection?.image}
           url={`${settings.ogUrl || window.location.origin}/${slug}`}
           type={settings.ogType || 'website'}
         />
@@ -192,7 +188,7 @@ export function DynamicPage() {
     );
   }
 
-  // Si solo tiene contenido, mostrar el formato tradicional con caja blanca
+  // Sin secciones: fallback simple (ya no existe `page.content` ni `page.heroImage`).
   return (
     <div className="min-h-screen">
       {/* SEOHead with Open Graph */}
@@ -200,18 +196,9 @@ export function DynamicPage() {
         title={page.seo?.metaTitle || page.title}
         description={page.seo?.metaDescription}
         keywords={Array.isArray(page.seo?.keywords) ? page.seo?.keywords.join(', ') : page.seo?.keywords}
-        image={page.heroImage}
         url={`${settings.ogUrl || window.location.origin}/${slug}`}
         type={settings.ogType || 'website'}
       />
-
-      {page.heroImage && (
-        <Hero
-          backgroundImage={page.heroImage}
-          title="estudio Cerámica"
-          subtitle="creativa en Barcelona"
-        />
-      )}
 
       <section className="py-16 lg:py-24 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -222,25 +209,14 @@ export function DynamicPage() {
             className="bg-white rounded-lg shadow-lg p-8 lg:p-12"
           >
             <h1 className="text-4xl lg:text-5xl mb-8 text-center">{page.title}</h1>
-            {page.content ? (
-              <div 
-                className="prose prose-lg max-w-none text-foreground/80"
-                style={{ 
-                  whiteSpace: 'pre-wrap',
-                }}
-              >
-                <ReactMarkdown rehypePlugins={[rehypeRaw]}>{page.content}</ReactMarkdown>
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-lg text-foreground/60 mb-4">
-                  Esta página aún no tiene contenido.
-                </p>
-                <p className="text-base text-foreground/40">
-                  Puedes editarla desde el administrador agregando secciones o contenido.
-                </p>
-              </div>
-            )}
+            <div className="text-center py-12">
+              <p className="text-lg text-foreground/60 mb-4">
+                Esta página aún no tiene secciones.
+              </p>
+              <p className="text-base text-foreground/40">
+                Puedes editarla desde el administrador agregando secciones.
+              </p>
+            </div>
           </motion.div>
         </div>
       </section>
