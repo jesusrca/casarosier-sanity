@@ -8,7 +8,22 @@ export const blogPost = defineType({
     defineField({ name: 'title', type: 'string' }),
     defineField({ name: 'slug', type: 'slug', options: { source: 'title' } }),
     defineField({ name: 'author', type: 'string' }),
-    defineField({ name: 'content', type: 'text' }),
+    defineField({
+      name: 'content',
+      type: 'array',
+      of: [
+        { type: 'block' },
+        { type: 'image', options: { hotspot: true } },
+        defineType({
+          name: 'embed',
+          type: 'object',
+          fields: [
+            defineField({ name: 'url', type: 'url' }),
+            defineField({ name: 'caption', type: 'string' }),
+          ],
+        }),
+      ],
+    }),
     defineField({ name: 'excerpt', type: 'text' }),
     defineField({ name: 'featured', type: 'boolean' }),
     defineField({ name: 'published', type: 'boolean' }),

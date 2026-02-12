@@ -131,11 +131,15 @@ export function Home() {
   const coursesTitle = coursesSection?.title || 'Cursos y workshops';
   const coursesTitleLine1 = coursesSection?.titleLine1 || 'CURSOS Y';
   const coursesTitleLine2 = coursesSection?.titleLine2 || 'WORKSHOPS';
+  const coursesDescription =
+    coursesSection?.description || settings.homeCoursesDescription || '';
 
   // Get second courses section data - no defaults
   const courses2 = courses2Section?.courses;
   const courses2TitleLine1 = courses2Section?.titleLine1;
   const courses2TitleLine2 = courses2Section?.titleLine2;
+  const courses2Description =
+    courses2Section?.description || settings.homeWorkshopsDescription || '';
 
   const toCourseCard = (item: any) => {
     if (!item) return null;
@@ -234,9 +238,9 @@ export function Home() {
                     {coursesTitleLine2}
                   </h2>
                 </div>
-                {settings.homeCoursesDescription && (
+                {coursesDescription && (
                   <p className="mt-4 text-lg text-[#7b7269] max-w-2xl">
-                    {settings.homeCoursesDescription}
+                    {coursesDescription}
                   </p>
                 )}
               </div>
@@ -272,9 +276,9 @@ export function Home() {
                     {courses2TitleLine2}
                   </h2>
                 </div>
-                {settings.homeWorkshopsDescription && (
+                {courses2Description && (
                   <p className="mt-4 text-lg text-[#7b7269] max-w-2xl">
-                    {settings.homeWorkshopsDescription}
+                    {courses2Description}
                   </p>
                 )}
               </div>

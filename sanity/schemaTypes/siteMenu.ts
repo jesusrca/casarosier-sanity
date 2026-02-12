@@ -5,6 +5,7 @@ export const siteMenu = defineType({
   title: 'Site Menu',
   type: 'document',
   fields: [
+    defineField({ name: 'title', type: 'string', initialValue: 'Menu Principal' }),
     defineField({
       name: 'items',
       type: 'array',
@@ -36,4 +37,10 @@ export const siteMenu = defineType({
       ],
     }),
   ],
+  preview: {
+    select: { title: 'title' },
+    prepare({ title }) {
+      return { title: title || 'Menu Principal' };
+    },
+  },
 });

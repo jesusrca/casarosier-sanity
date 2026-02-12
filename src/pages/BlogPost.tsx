@@ -7,14 +7,26 @@ import { generateBlogPostStructuredData } from '../components/SEO';
 import { Navigation } from '../components/Navigation';
 import { LoadingScreen } from '../components/LoadingScreen';
 import { Calendar, User, ArrowLeft, ChevronUp, Clock } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
+import { PortableText } from '@portabletext/react';
 
 // Función para calcular tiempo estimado de lectura
-function calculateReadingTime(content: string): number {
+function extractTextFromPortable(blocks: any): string {
+  if (!Array.isArray(blocks)) return '';
+  return blocks
+    .map((block: any) => {
+      if (block._type === 'block') {
+        return block.children?.map((child: any) => child.text).join('') || '';
+      }
+      return '';
+    })
+    .join(' ');
+}
+
+function calculateReadingTime(content: any): number {
   const wordsPerMinute = 200;
-  const words = content.trim().split(/\s+/).length;
-  return Math.ceil(words / wordsPerMinute);
+  const text = typeof content === 'string' ? content : extractTextFromPortable(content);
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(words / wordsPerMinute));
 }
 
 export function BlogPost() {
@@ -173,61 +185,49 @@ export function BlogPost() {
           >
             {/* Contenido del artículo */}
             <div className="prose prose-lg max-w-none">
-              <ReactMarkdown
-                rehypePlugins={[rehypeRaw]}
+              <PortableText
+                value={post.content}
                 components={{
-                  p: ({ node, ...props }) => (
-                    <p className="mb-6 text-base leading-relaxed text-foreground/80" {...props} />
-                  ),
-                  h1: ({ node, ...props }) => (
-                    <h1 className="mt-12 mb-6 first:mt-0" {...props} />
-                  ),
-                  h2: ({ node, ...props }) => (
-                    <h2 className="mt-12 mb-6 first:mt-0" {...props} />
-                  ),
-                  h3: ({ node, ...props }) => (
-                    <h3 className="mt-10 mb-4 first:mt-0" {...props} />
-                  ),
-                  ul: ({ node, ...props }) => (
-                    <ul className="list-disc pl-6 mb-6 space-y-2" {...props} />
-                  ),
-                  ol: ({ node, ...props }) => (
-                    <ol className="list-decimal pl-6 mb-6 space-y-2" {...props} />
-                  ),
-                  li: ({ node, ...props }) => (
-                    <li className="text-base text-foreground/80 leading-relaxed" {...props} />
-                  ),
-                  blockquote: ({ node, ...props }) => (
-                    <blockquote 
-                      className="border-l-4 border-primary pl-6 py-4 my-8 italic text-foreground/70 bg-white/50 rounded-r-lg" 
-                      {...props} 
-                    />
-                  ),
-                  code: ({ node, inline, ...props }) => 
-                    inline ? (
-                      <code className="bg-white/80 px-2 py-1 rounded text-sm font-mono text-primary border border-border" {...props} />
-                    ) : (
-                      <code className="block bg-white/80 p-4 rounded-lg text-sm font-mono overflow-x-auto my-6 border border-border shadow-sm" {...props} />
+                  block: {
+                    normal: ({ children }) => (
+                      <p className="mb-6 text-base leading-relaxed text-foreground/80">{children}</p>
                     ),
-                  a: ({ node, ...props }) => (
-                    <a className="text-primary hover:underline font-medium underline-offset-2" target="_blank" rel="noopener noreferrer" {...props} />
-                  ),
-                  img: ({ node, ...props }) => (
-                    <img className="rounded-lg shadow-lg my-8 max-w-full mx-auto border border-border" {...props} />
-                  ),
-                  strong: ({ node, ...props }) => (
-                    <strong className="font-semibold text-foreground" {...props} />
-                  ),
-                  em: ({ node, ...props }) => (
-                    <em className="italic" {...props} />
-                  ),
-                  hr: ({ node, ...props }) => (
-                    <hr className="my-12 border-border" {...props} />
-                  ),
+                    h1: ({ children }) => <h1 className="mt-12 mb-6 first:mt-0">{children}</h1>,
+                    h2: ({ children }) => <h2 className="mt-12 mb-6 first:mt-0">{children}</h2>,
+                    h3: ({ children }) => <h3 className="mt-10 mb-4 first:mt-0">{children}</h3>,
+                  },
+                  list: {
+                    bullet: ({ children }) => <ul className="list-disc pl-6 mb-6 space-y-2">{children}</ul>,
+                    number: ({ children }) => <ol className="list-decimal pl-6 mb-6 space-y-2">{children}</ol>,
+                  },
+                  listItem: {
+                    bullet: ({ children }) => <li className="text-base text-foreground/80 leading-relaxed">{children}</li>,
+                    number: ({ children }) => <li className="text-base text-foreground/80 leading-relaxed">{children}</li>,
+                  },
+                  marks: {
+                    strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
+                    em: ({ children }) => <em className="italic">{children}</em>,
+                    link: ({ value, children }) => (
+                      <a className="text-primary hover:underline font-medium underline-offset-2" target="_blank" rel="noopener noreferrer" href={value?.href}>
+                        {children}
+                      </a>
+                    ),
+                  },
+                  types: {
+                    image: ({ value }) => (
+                      <img className="rounded-lg shadow-lg my-8 max-w-full mx-auto border border-border" src={value.asset?.url} alt={value.alt || ''} />
+                    ),
+                    embed: ({ value }) => (
+                      <div className="my-8">
+                        <div className="aspect-video w-full">
+                          <iframe src={value.url} className="w-full h-full rounded-lg border" allowFullScreen />
+                        </div>
+                        {value.caption && <p className="mt-2 text-sm text-foreground/60">{value.caption}</p>}
+                      </div>
+                    ),
+                  },
                 }}
-              >
-                {post.content}
-              </ReactMarkdown>
+              />
             </div>
 
             {/* Footer del artículo */}

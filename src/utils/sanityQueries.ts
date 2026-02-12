@@ -115,6 +115,7 @@ export async function fetchPages() {
       "mainImageUrl": mainImage.asset->url,
       "image": image.asset->url,
       "images": images[]{ "url": asset->url },
+      description,
       "courses": courses[]->{
         "id": _id,
         type,

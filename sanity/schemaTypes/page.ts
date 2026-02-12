@@ -63,6 +63,12 @@ export const page = defineType({
             defineField({ name: 'titleLine1', type: 'string' }),
             defineField({ name: 'titleLine2', type: 'string' }),
             defineField({
+              name: 'description',
+              title: 'Description',
+              type: 'text',
+              description: 'Texto descriptivo que aparece debajo del titulo en Home.',
+            }),
+            defineField({
               name: 'courses',
               type: 'array',
               of: [{ type: 'reference', to: [{ type: 'curso' }] }],
@@ -77,6 +83,12 @@ export const page = defineType({
             defineField({ name: 'type', type: 'string', initialValue: 'courses2' }),
             defineField({ name: 'titleLine1', type: 'string' }),
             defineField({ name: 'titleLine2', type: 'string' }),
+            defineField({
+              name: 'description',
+              title: 'Description',
+              type: 'text',
+              description: 'Texto descriptivo que aparece debajo del titulo en Home.',
+            }),
             defineField({
               name: 'courses',
               type: 'array',
