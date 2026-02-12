@@ -478,81 +478,12 @@ export function SettingsManager() {
           </div>
         </div>
 
+        {/* Home hero is now editable in Sanity: Page -> home */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-xl mb-4">Imágenes Hero del Home</h3>
-          <p className="text-sm text-foreground/60 mb-4">
-            Personaliza las imágenes de fondo del Hero en la página principal. Haz clic sobre las imágenes para agregar información SEO.
+          <h3 className="text-xl mb-4">Hero del Home</h3>
+          <p className="text-sm text-foreground/60">
+            Las imágenes del hero del Home ahora se editan en Sanity dentro de la página "home" (tipo Page).
           </p>
-          
-          <div className="space-y-6">
-            {/* Desktop Hero Image */}
-            <ImageUploader
-              currentImage={typeof settings.heroImageDesktop === 'string' ? settings.heroImageDesktop : settings.heroImageDesktop?.url || ''}
-              onImageSelect={(data) => {
-                if (typeof data === 'string') {
-                  updateField('heroImageDesktop', { url: data, alt: '', description: '' });
-                } else {
-                  updateField('heroImageDesktop', data);
-                }
-              }}
-              label="Imagen Hero Desktop (recomendado: 1920x1080px o superior)"
-              withMetadata={true}
-              initialAlt={typeof settings.heroImageDesktop === 'object' ? settings.heroImageDesktop?.alt || '' : ''}
-              initialDescription={typeof settings.heroImageDesktop === 'object' ? settings.heroImageDesktop?.description || '' : ''}
-            />
-
-            {/* Mobile Hero Image */}
-            <ImageUploader
-              currentImage={typeof settings.heroImageMobile === 'string' ? settings.heroImageMobile : settings.heroImageMobile?.url || ''}
-              onImageSelect={(data) => {
-                if (typeof data === 'string') {
-                  updateField('heroImageMobile', { url: data, alt: '', description: '' });
-                } else {
-                  updateField('heroImageMobile', data);
-                }
-              }}
-              label="Imagen Hero Mobile (recomendado: 768x1024px o superior, orientación vertical)"
-              withMetadata={true}
-              initialAlt={typeof settings.heroImageMobile === 'object' ? settings.heroImageMobile?.alt || '' : ''}
-              initialDescription={typeof settings.heroImageMobile === 'object' ? settings.heroImageMobile?.description || '' : ''}
-            />
-
-            {/* Hero Text Image 1 */}
-            <ImageUploader
-              currentImage={typeof settings.heroTextImage1 === 'string' ? settings.heroTextImage1 : settings.heroTextImage1?.url || ''}
-              onImageSelect={(data) => {
-                if (typeof data === 'string') {
-                  updateField('heroTextImage1', { url: data, alt: '', description: '' });
-                } else {
-                  updateField('heroTextImage1', data);
-                }
-              }}
-              label="Imagen de Texto del Hero 1 (recomendado: PNG transparente)"
-              withMetadata={true}
-              initialAlt={typeof settings.heroTextImage1 === 'object' ? settings.heroTextImage1?.alt || '' : ''}
-              initialDescription={typeof settings.heroTextImage1 === 'object' ? settings.heroTextImage1?.description || '' : ''}
-            />
-
-            {/* Hero Text Image 2 */}
-            <ImageUploader
-              currentImage={typeof settings.heroTextImage2 === 'string' ? settings.heroTextImage2 : settings.heroTextImage2?.url || ''}
-              onImageSelect={(data) => {
-                if (typeof data === 'string') {
-                  updateField('heroTextImage2', { url: data, alt: '', description: '' });
-                } else {
-                  updateField('heroTextImage2', data);
-                }
-              }}
-              label="Imagen de Texto del Hero 2 (opcional, para efecto fade)"
-              withMetadata={true}
-              initialAlt={typeof settings.heroTextImage2 === 'object' ? settings.heroTextImage2?.alt || '' : ''}
-              initialDescription={typeof settings.heroTextImage2 === 'object' ? settings.heroTextImage2?.description || '' : ''}
-            />
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-              <strong>💡 Efecto Fade:</strong> Si subes ambas imágenes de texto, se mostrará un efecto de transición automática cada 5 segundos entre ellas. Si solo subes la primera imagen, se mostrará sin animación.
-            </div>
-          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6">
@@ -836,43 +767,7 @@ export function SettingsManager() {
           </div>
         </div>
 
-        {/* Clases y Workshops destacados en Home */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-xl mb-4">Descripciones de Secciones del Home</h3>
-          <p className="text-sm text-foreground/60 mb-4">
-            Agrega descripciones que aparecerán debajo de los títulos de cada sección en la página de inicio
-          </p>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm mb-2">Descripción Sección de Clases (Sección 1)</label>
-              <textarea
-                value={settings.homeCoursesDescription || ''}
-                onChange={(e) => updateField('homeCoursesDescription', e.target.value)}
-                rows={3}
-                placeholder="Ej: Explora nuestras clases regulares de cerámica en Barcelona"
-                className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-y"
-              />
-              <p className="text-xs text-foreground/60 mt-1">
-                Texto que aparece debajo del título "CURSOS Y WORKSHOPS"
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm mb-2">Descripción Sección de Workshops (Sección 2)</label>
-              <textarea
-                value={settings.homeWorkshopsDescription || ''}
-                onChange={(e) => updateField('homeWorkshopsDescription', e.target.value)}
-                rows={3}
-                placeholder="Ej: Talleres intensivos de fin de semana para todos los niveles"
-                className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-y"
-              />
-              <p className="text-xs text-foreground/60 mt-1">
-                Texto que aparece debajo del título de la segunda sección del home
-              </p>
-            </div>
-          </div>
-        </div>
+        {/* Home section descriptions moved to Sanity: Page -> home -> sections */}
 
         <div className="bg-white rounded-lg shadow-md p-6">
           <h3 className="text-xl mb-4">Clases Destacadas en Home (Sección 1)</h3>

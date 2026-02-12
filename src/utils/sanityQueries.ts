@@ -109,6 +109,10 @@ export async function fetchPages() {
     content,
     seo,
     "heroImage": heroImage.asset->url,
+    "heroImageDesktop": heroImageDesktop.asset->url,
+    "heroImageMobile": heroImageMobile.asset->url,
+    "heroTextImage1": heroTextImage1.asset->url,
+    "heroTextImage2": heroTextImage2.asset->url,
     sections[]{
       ...,
       "mainImage": mainImage.asset->url,
@@ -133,6 +137,19 @@ export async function fetchPages() {
     updatedAt
   }`;
   return sanityFetch<any[]>(query);
+}
+
+export async function fetchHomePage() {
+  const query = `*[_type == "page" && slug.current == "home"][0]{
+    "id": _id,
+    "slug": slug.current,
+    title,
+    "heroImageDesktop": heroImageDesktop.asset->url,
+    "heroImageMobile": heroImageMobile.asset->url,
+    "heroTextImage1": heroTextImage1.asset->url,
+    "heroTextImage2": heroTextImage2.asset->url
+  }`;
+  return sanityFetch<any>(query);
 }
 
 export async function fetchLandingPage(slug: string) {

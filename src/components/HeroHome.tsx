@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
-import { fetchMenu, fetchSettings } from '../utils/sanityQueries';
+import { fetchHomePage, fetchMenu, fetchSettings } from '../utils/sanityQueries';
 import heroBackgroundImage from "figma:asset/cf3b622b1e53dff197470df428faee1c6f268025.png";
 import logoImage from "figma:asset/2dacc970a5a37325400c034e8aab058b32fcf649.png";
 import heroTextImage from "figma:asset/00083d30bea445cb191f41f57aa132965c193e0d.png";
@@ -63,53 +63,67 @@ export function HeroHome() {
 
   const loadHeroImages = async () => {
     try {
-      const response = await fetchSettings();
-      if (response) {
-        // Handle both string and object formats for hero images
-        const desktopImage = typeof response.heroImageDesktop === 'string' 
-          ? response.heroImageDesktop 
-          : response.heroImageDesktop || heroBackgroundImage;
-        
-        const mobileImage = typeof response.heroImageMobile === 'string' 
-          ? response.heroImageMobile 
-          : response.heroImageMobile || heroBackgroundImage;
-        
-        console.log('🖼️ Hero Images loaded:', { 
-          desktop: desktopImage, 
-          mobile: mobileImage,
-          isMobile: window.innerWidth < 768,
-          windowWidth: window.innerWidth
-        });
-        
-        setHeroImages({
-          desktop: desktopImage,
-          mobile: mobileImage
-        });
+      // Prefer Home page fields; fall back to legacy siteSettings.
+      const home = await fetchHomePage();
 
-        // Load hero text images
-        const textImages: string[] = [];
-        const img1 = typeof response.heroTextImage1 === 'string' 
-          ? response.heroTextImage1 
-          : response.heroTextImage1;
-        const img2 = typeof response.heroTextImage2 === 'string' 
-          ? response.heroTextImage2 
-          : response.heroTextImage2;
-        
-        if (img1) textImages.push(img1);
-        if (img2) textImages.push(img2);
-        
-        if (textImages.length > 0) {
-          setHeroTextImages(textImages);
-        } else {
-          // Use default text image if no custom images configured
-          setHeroTextImages([heroTextImage]);
+      let desktopImage = home?.heroImageDesktop || '';
+      let mobileImage = home?.heroImageMobile || '';
+      let textImg1 = home?.heroTextImage1 || '';
+      let textImg2 = home?.heroTextImage2 || '';
+
+      if (!desktopImage || !mobileImage || (!textImg1 && !textImg2)) {
+        const legacy = await fetchSettings();
+
+        if (!desktopImage) {
+          desktopImage =
+            typeof legacy?.heroImageDesktop === 'string'
+              ? legacy.heroImageDesktop
+              : legacy?.heroImageDesktop || '';
         }
+        if (!mobileImage) {
+          mobileImage =
+            typeof legacy?.heroImageMobile === 'string'
+              ? legacy.heroImageMobile
+              : legacy?.heroImageMobile || '';
+        }
+        if (!textImg1) {
+          textImg1 =
+            typeof legacy?.heroTextImage1 === 'string'
+              ? legacy.heroTextImage1
+              : legacy?.heroTextImage1 || '';
+        }
+        if (!textImg2) {
+          textImg2 =
+            typeof legacy?.heroTextImage2 === 'string'
+              ? legacy.heroTextImage2
+              : legacy?.heroTextImage2 || '';
+        }
+      }
+
+      desktopImage = desktopImage || heroBackgroundImage;
+      mobileImage = mobileImage || heroBackgroundImage;
+        
+      console.log('🖼️ Hero Images loaded:', {
+        desktop: desktopImage,
+        mobile: mobileImage,
+        isMobile: window.innerWidth < 768,
+        windowWidth: window.innerWidth
+      });
+
+      setHeroImages({
+        desktop: desktopImage,
+        mobile: mobileImage
+      });
+
+      // Load hero text images
+      const textImages: string[] = [];
+      if (textImg1) textImages.push(textImg1);
+      if (textImg2) textImages.push(textImg2);
+
+      if (textImages.length > 0) {
+        setHeroTextImages(textImages);
       } else {
-        // No settings found, use defaults
-        setHeroImages({
-          desktop: heroBackgroundImage,
-          mobile: heroBackgroundImage
-        });
+        // Use default text image if no custom images configured
         setHeroTextImages([heroTextImage]);
       }
     } catch (error) {

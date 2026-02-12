@@ -27,12 +27,15 @@ export const siteSettings = defineType({
     defineField({ name: 'instagramHandle', type: 'string' }),
     defineField({ name: 'instagramLink', type: 'string' }),
     defineField({ name: 'googleAnalyticsId', type: 'string' }),
-    defineField({ name: 'homeCoursesDescription', type: 'text' }),
-    defineField({ name: 'homeWorkshopsDescription', type: 'text' }),
+    // Deprecated: now editable in the Home page document (page.slug == "home").
+    defineField({ name: 'homeCoursesDescription', type: 'text', hidden: true }),
+    defineField({ name: 'homeWorkshopsDescription', type: 'text', hidden: true }),
     defineField({
       name: 'heroImageDesktop',
       type: 'image',
       options: { hotspot: true },
+      // Deprecated: now editable in the Home page document.
+      hidden: true,
       fields: [
         defineField({ name: 'alt', type: 'string' }),
         defineField({ name: 'description', type: 'string' }),
@@ -42,6 +45,8 @@ export const siteSettings = defineType({
       name: 'heroImageMobile',
       type: 'image',
       options: { hotspot: true },
+      // Deprecated: now editable in the Home page document.
+      hidden: true,
       fields: [
         defineField({ name: 'alt', type: 'string' }),
         defineField({ name: 'description', type: 'string' }),
@@ -51,11 +56,15 @@ export const siteSettings = defineType({
       name: 'heroTextImage1',
       type: 'image',
       options: { hotspot: true },
+      // Deprecated: now editable in the Home page document.
+      hidden: true,
     }),
     defineField({
       name: 'heroTextImage2',
       type: 'image',
       options: { hotspot: true },
+      // Deprecated: now editable in the Home page document.
+      hidden: true,
     }),
     defineField({
       name: 'blogHeroImage',

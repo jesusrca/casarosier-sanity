@@ -131,5 +131,42 @@ export const page = defineType({
       options: { hotspot: true },
       fields: [defineField({ name: 'alt', type: 'string' })],
     }),
+    // Home-only hero controls live on the Home page document, not global settings.
+    defineField({
+      name: 'heroImageDesktop',
+      title: 'Home Hero Image (Desktop)',
+      type: 'image',
+      options: { hotspot: true },
+      hidden: ({ document }) => document?.slug?.current !== 'home',
+      fields: [
+        defineField({ name: 'alt', type: 'string' }),
+        defineField({ name: 'description', type: 'string' }),
+      ],
+    }),
+    defineField({
+      name: 'heroImageMobile',
+      title: 'Home Hero Image (Mobile)',
+      type: 'image',
+      options: { hotspot: true },
+      hidden: ({ document }) => document?.slug?.current !== 'home',
+      fields: [
+        defineField({ name: 'alt', type: 'string' }),
+        defineField({ name: 'description', type: 'string' }),
+      ],
+    }),
+    defineField({
+      name: 'heroTextImage1',
+      title: 'Home Hero Text Image 1',
+      type: 'image',
+      options: { hotspot: true },
+      hidden: ({ document }) => document?.slug?.current !== 'home',
+    }),
+    defineField({
+      name: 'heroTextImage2',
+      title: 'Home Hero Text Image 2',
+      type: 'image',
+      options: { hotspot: true },
+      hidden: ({ document }) => document?.slug?.current !== 'home',
+    }),
   ],
 });
