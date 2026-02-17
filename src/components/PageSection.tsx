@@ -520,9 +520,6 @@ export function PageSection({ section, siteSettings, isFirstSection }: PageSecti
       return (
         <section className="py-12 lg:py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {section.title && (
-              <h2 className="mb-12 text-center">{section.title}</h2>
-            )}
             <div className="space-y-12 lg:space-y-16">
               {section.members && section.members.map((member: any, index: number) => (
                 <motion.div

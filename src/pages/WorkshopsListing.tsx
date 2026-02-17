@@ -132,9 +132,16 @@ export function WorkshopsListing() {
                     )}
 
                     {workshop.shortDescription && (
-                      <p className="text-foreground/70 text-sm leading-relaxed line-clamp-3">
-                        {workshop.shortDescription}
-                      </p>
+                      /<\/?[a-z][\s\S]*>/i.test(workshop.shortDescription) ? (
+                        <p
+                          className="text-foreground/70 text-sm leading-relaxed line-clamp-3"
+                          dangerouslySetInnerHTML={{ __html: workshop.shortDescription }}
+                        />
+                      ) : (
+                        <p className="text-foreground/70 text-sm leading-relaxed line-clamp-3">
+                          {workshop.shortDescription}
+                        </p>
+                      )
                     )}
 
                     {/* Precio */}

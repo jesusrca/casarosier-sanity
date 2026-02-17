@@ -587,21 +587,19 @@ export function DynamicContentPage() {
                 {content.content?.whatYouWillLearn && (
                   <div className="space-y-4">
                     <h3 className="text-xl mb-3">{content.content.whatYouWillLearnTitle || '¿QUÉ APRENDERÁS?'}</h3>
-                    <div 
-                      className="text-base leading-relaxed text-foreground/80 prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: content.content.whatYouWillLearn }}
-                    />
+                    <div className="text-base leading-relaxed text-foreground/80 whitespace-pre-wrap">
+                      {content.content.whatYouWillLearn}
+                    </div>
                   </div>
                 )}
 
                 {/* Who Can Participate */}
-                {content.content.whoCanParticipate && content.content.whoCanParticipate.replace(/<[^>]*>/g, '').trim() && (
+                {content.content.whoCanParticipate && content.content.whoCanParticipate.trim() && (
                   <div className="space-y-4">
                     <h3 className="text-xl mb-3">{content.content.whoCanParticipateTitle || '¿QUIÉN PUEDE PARTICIPAR?'}</h3>
-                    <div 
-                      className="text-base leading-relaxed text-foreground/80 prose prose-sm max-w-none text-[rgba(45,37,32,0.85)]"
-                      dangerouslySetInnerHTML={{ __html: content.content.whoCanParticipate }}
-                    />
+                    <div className="text-base leading-relaxed whitespace-pre-wrap text-[rgba(45,37,32,0.85)]">
+                      {content.content.whoCanParticipate}
+                    </div>
                   </div>
                 )}
 

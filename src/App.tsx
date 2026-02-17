@@ -25,6 +25,7 @@ const Blog = lazy(() => import('./pages/Blog').then(module => ({ default: module
 const BlogPost = lazy(() => import('./pages/BlogPost').then(module => ({ default: module.BlogPost })));
 const ComingSoon = lazy(() => import('./pages/ComingSoon').then(module => ({ default: module.ComingSoon })));
 const DynamicContentPage = lazy(() => import('./pages/DynamicContentPage').then(module => ({ default: module.DynamicContentPage })));
+const ElEstudio = lazy(() => import('./pages/ElEstudio').then(module => ({ default: module.ElEstudio })));
 const DynamicPage = lazy(() => import('./pages/DynamicPage').then(module => ({ default: module.DynamicPage })));
 const NotFound = lazy(() => import('./pages/NotFound').then(module => ({ default: module.NotFound })));
 
@@ -65,6 +66,9 @@ function AppContent() {
               
               {/* Página de Tarjeta de Regalo */}
               <Route path="/tarjeta-regalo/:slug" element={<PageTransition><DynamicContentPage /></PageTransition>} />
+
+              {/* Página fija de El Estudio */}
+              <Route path="/el-estudio" element={<PageTransition><ElEstudio /></PageTransition>} />
               
               {/* Dynamic custom pages - antes del 404 */}
               <Route path="/:slug" element={<PageTransition><DynamicPage /></PageTransition>} />

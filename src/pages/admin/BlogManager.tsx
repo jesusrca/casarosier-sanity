@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { blogAPI } from '../../utils/api';
-import { Plus, Edit, Trash2, Eye, Loader2, Save } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2, Save } from 'lucide-react';
 import { RichTextEditor } from '../../components/RichTextEditor';
 import { ImageUploader } from '../../components/ImageUploader';
 import { slugify } from '../../utils/slugify';
@@ -61,7 +61,6 @@ export function BlogManager() {
       content: '',
       excerpt: '',
       author: 'Casa Rosier',
-      published: false,
       featured: false,
       featuredImage: '',
       seo: {
@@ -208,19 +207,6 @@ export function BlogManager() {
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  id="published"
-                  checked={editingPost.published}
-                  onChange={(e) => setEditingPost({ ...editingPost, published: e.target.checked })}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="published" className="text-sm">
-                  Publicar en el sitio web
-                </label>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
                   id="featured"
                   checked={editingPost.featured || false}
                   onChange={(e) => setEditingPost({ ...editingPost, featured: e.target.checked })}
@@ -315,16 +301,6 @@ export function BlogManager() {
                   {post.featured && (
                     <span className="px-2 py-1 rounded text-xs bg-amber-100 text-amber-700 flex items-center gap-1">
                       ⭐ Destacado
-                    </span>
-                  )}
-                  {post.published ? (
-                    <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-700 flex items-center gap-1">
-                      <Eye className="w-3 h-3" />
-                      Publicado
-                    </span>
-                  ) : (
-                    <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-700">
-                      Borrador
                     </span>
                   )}
                 </div>

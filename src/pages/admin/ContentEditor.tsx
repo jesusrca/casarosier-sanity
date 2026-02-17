@@ -818,11 +818,12 @@ export function ContentEditor({ item: initialItem, onSave, onCancel, onDelete }:
 
                     <div className="relative" style={{ overflow: 'visible', zIndex: 50 }}>
                       <label className="block text-sm mb-2">¿Qué aprenderás?</label>
-                      <RichTextEditor
+                      <textarea
                         value={item.content?.whatYouWillLearn || ''}
-                        onChange={(value) => updateNestedField('content', 'whatYouWillLearn', value)}
+                        onChange={(e) => updateNestedField('content', 'whatYouWillLearn', e.target.value)}
+                        rows={10}
                         placeholder="Describe qué aprenderán los estudiantes..."
-                        height="250px"
+                        className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                     </div>
 
@@ -839,11 +840,12 @@ export function ContentEditor({ item: initialItem, onSave, onCancel, onDelete }:
 
                     <div className="relative" style={{ overflow: 'visible', zIndex: 50 }}>
                       <label className="block text-sm mb-2">¿Quién puede participar?</label>
-                      <RichTextEditor
+                      <textarea
                         value={item.content?.whoCanParticipate || ''}
-                        onChange={(value) => updateNestedField('content', 'whoCanParticipate', value)}
+                        onChange={(e) => updateNestedField('content', 'whoCanParticipate', e.target.value)}
+                        rows={8}
                         placeholder="Describe quién puede participar en este curso..."
-                        height="200px"
+                        className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                     </div>
 

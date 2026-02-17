@@ -24,13 +24,12 @@ interface ContentItem {
 interface BlogPost {
   slug: string;
   title: string;
-  content: string;
+  content: any;
   excerpt?: string;
   featuredImage?: string;
   author?: string;
   category?: string;
   publishedAt?: string;
-  published: boolean;
   featured?: boolean;
   seo?: any;
 }
@@ -148,7 +147,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           console.warn('⚠️ Error loading content items:', err);
           return [];
         }),
-        fetchBlogPosts(true).catch((err) => {
+        fetchBlogPosts().catch((err) => {
           console.warn('⚠️ Error loading blog posts:', err);
           return [];
         }),

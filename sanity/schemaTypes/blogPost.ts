@@ -26,7 +26,6 @@ export const blogPost = defineType({
     }),
     defineField({ name: 'excerpt', type: 'text' }),
     defineField({ name: 'featured', type: 'boolean' }),
-    defineField({ name: 'published', type: 'boolean' }),
     defineField({ name: 'createdAt', type: 'datetime' }),
     defineField({ name: 'updatedAt', type: 'datetime' }),
     defineField({

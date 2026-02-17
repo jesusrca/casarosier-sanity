@@ -6,8 +6,10 @@ import { SEOHead } from '../components/SEOHead';
 import { generateBlogPostStructuredData } from '../components/SEO';
 import { Navigation } from '../components/Navigation';
 import { LoadingScreen } from '../components/LoadingScreen';
-import { Calendar, User, ArrowLeft, ChevronUp, Clock } from 'lucide-react';
+import { Calendar, ArrowLeft, ChevronUp, Clock } from 'lucide-react';
 import { PortableText } from '@portabletext/react';
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 
 // Función para calcular tiempo estimado de lectura
 function extractTextFromPortable(blocks: any): string {
@@ -37,7 +39,7 @@ export function BlogPost() {
 
   // Control del delay antes de mostrar 404 para evitar flash durante transiciones
   useEffect(() => {
-    if ((!post || !post.published) && !loading) {
+    if (!post && !loading) {
       // Dar un pequeño margen de tiempo antes de mostrar 404
       const timer = setTimeout(() => {
         setShowNotFound(true);
@@ -49,11 +51,11 @@ export function BlogPost() {
   }, [post, loading, slug]);
 
   // Si está cargando o esperando para mostrar 404, mostrar skeleton
-  if (loading || ((!post || !post.published) && !showNotFound)) {
+  if (loading || (!post && !showNotFound)) {
     return <LoadingScreen />;
   }
 
-  if ((!post || !post.published) && showNotFound) {
+  if (!post && showNotFound) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -130,11 +132,27 @@ export function BlogPost() {
                 {post.title}
               </motion.h1>
 
+              {/* Imagen destacada */}
+              {post.featuredImage && (
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.7, delay: 0.3 }}
+                  className="w-full"
+                >
+                  <img
+                    src={post.featuredImage}
+                    alt={post.title}
+                    className="w-full h-auto rounded-lg shadow-lg object-cover"
+                  />
+                </motion.div>
+              )}
+
               {/* Metadata: Tiempo de lectura y fecha */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
                 className="flex items-center justify-center gap-6 text-sm text-foreground/60"
               >
                 <div className="flex items-center gap-2">
@@ -153,22 +171,6 @@ export function BlogPost() {
                   </span>
                 </div>
               </motion.div>
-
-              {/* Imagen destacada */}
-              {post.featuredImage && (
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7, delay: 0.4 }}
-                  className="mt-12 w-full"
-                >
-                  <img 
-                    src={post.featuredImage} 
-                    alt={post.title}
-                    className="w-full h-auto rounded-lg shadow-lg object-cover"
-                  />
-                </motion.div>
-              )}
             </motion.div>
           </div>
         </div>
@@ -185,49 +187,63 @@ export function BlogPost() {
           >
             {/* Contenido del artículo */}
             <div className="prose prose-lg max-w-none">
-              <PortableText
-                value={post.content}
-                components={{
-                  block: {
-                    normal: ({ children }) => (
-                      <p className="mb-6 text-base leading-relaxed text-foreground/80">{children}</p>
-                    ),
-                    h1: ({ children }) => <h1 className="mt-12 mb-6 first:mt-0">{children}</h1>,
-                    h2: ({ children }) => <h2 className="mt-12 mb-6 first:mt-0">{children}</h2>,
-                    h3: ({ children }) => <h3 className="mt-10 mb-4 first:mt-0">{children}</h3>,
-                  },
-                  list: {
-                    bullet: ({ children }) => <ul className="list-disc pl-6 mb-6 space-y-2">{children}</ul>,
-                    number: ({ children }) => <ol className="list-decimal pl-6 mb-6 space-y-2">{children}</ol>,
-                  },
-                  listItem: {
-                    bullet: ({ children }) => <li className="text-base text-foreground/80 leading-relaxed">{children}</li>,
-                    number: ({ children }) => <li className="text-base text-foreground/80 leading-relaxed">{children}</li>,
-                  },
-                  marks: {
-                    strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
-                    em: ({ children }) => <em className="italic">{children}</em>,
-                    link: ({ value, children }) => (
-                      <a className="text-primary hover:underline font-medium underline-offset-2" target="_blank" rel="noopener noreferrer" href={value?.href}>
-                        {children}
-                      </a>
-                    ),
-                  },
-                  types: {
-                    image: ({ value }) => (
-                      <img className="rounded-lg shadow-lg my-8 max-w-full mx-auto border border-border" src={value.asset?.url} alt={value.alt || ''} />
-                    ),
-                    embed: ({ value }) => (
-                      <div className="my-8">
-                        <div className="aspect-video w-full">
-                          <iframe src={value.url} className="w-full h-full rounded-lg border" allowFullScreen />
+              {Array.isArray(post.content) ? (
+                <PortableText
+                  value={post.content}
+                  components={{
+                    block: {
+                      normal: ({ children }) => (
+                        <p className="mb-6 text-base leading-relaxed text-foreground/80">{children}</p>
+                      ),
+                      h1: ({ children }) => <h1 className="mt-12 mb-6 first:mt-0">{children}</h1>,
+                      h2: ({ children }) => <h2 className="mt-12 mb-6 first:mt-0">{children}</h2>,
+                      h3: ({ children }) => <h3 className="mt-10 mb-4 first:mt-0">{children}</h3>,
+                    },
+                    list: {
+                      bullet: ({ children }) => <ul className="list-disc pl-6 mb-6 space-y-2">{children}</ul>,
+                      number: ({ children }) => <ol className="list-decimal pl-6 mb-6 space-y-2">{children}</ol>,
+                    },
+                    listItem: {
+                      bullet: ({ children }) => <li className="text-base text-foreground/80 leading-relaxed">{children}</li>,
+                      number: ({ children }) => <li className="text-base text-foreground/80 leading-relaxed">{children}</li>,
+                    },
+                    marks: {
+                      strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
+                      em: ({ children }) => <em className="italic">{children}</em>,
+                      link: ({ value, children }) => (
+                        <a className="text-primary hover:underline font-medium underline-offset-2" target="_blank" rel="noopener noreferrer" href={value?.href}>
+                          {children}
+                        </a>
+                      ),
+                    },
+                    types: {
+                      image: ({ value }) => {
+                        const imageUrl = value?.asset?.url;
+                        if (!imageUrl) return null;
+                        return (
+                          <img
+                            className="rounded-lg shadow-lg my-8 max-w-full mx-auto border border-border"
+                            src={imageUrl}
+                            alt={value.alt || ''}
+                          />
+                        );
+                      },
+                      embed: ({ value }) => (
+                        <div className="my-8">
+                          <div className="aspect-video w-full">
+                            <iframe src={value.url} className="w-full h-full rounded-lg border" allowFullScreen />
+                          </div>
+                          {value.caption && <p className="mt-2 text-sm text-foreground/60">{value.caption}</p>}
                         </div>
-                        {value.caption && <p className="mt-2 text-sm text-foreground/60">{value.caption}</p>}
-                      </div>
-                    ),
-                  },
-                }}
-              />
+                      ),
+                    },
+                  }}
+                />
+              ) : (
+                <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                  {String(post.content || '')}
+                </ReactMarkdown>
+              )}
             </div>
 
             {/* Footer del artículo */}

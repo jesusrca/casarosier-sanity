@@ -33,6 +33,26 @@ export const page = defineType({
       type: 'array',
       of: [
         defineType({
+          name: 'heroSection',
+          title: 'Hero Section',
+          type: 'object',
+          fields: [
+            defineField({ name: 'type', type: 'string', initialValue: 'hero' }),
+            defineField({ name: 'title', type: 'string' }),
+            defineField({ name: 'subtitle', type: 'string' }),
+            defineField({
+              name: 'image',
+              type: 'image',
+              options: { hotspot: true },
+            }),
+            defineField({
+              name: 'titleImage',
+              type: 'image',
+              options: { hotspot: true },
+            }),
+          ],
+        }),
+        defineType({
           name: 'aboutSection',
           title: 'About Section',
           type: 'object',
@@ -108,6 +128,46 @@ export const page = defineType({
               name: 'image',
               type: 'image',
               options: { hotspot: true },
+            }),
+          ],
+        }),
+        defineType({
+          name: 'textSection',
+          title: 'Text Section',
+          type: 'object',
+          fields: [
+            defineField({ name: 'type', type: 'string', initialValue: 'text' }),
+            defineField({ name: 'title', type: 'string' }),
+            defineField({ name: 'content', type: 'text' }),
+          ],
+        }),
+        defineType({
+          name: 'teamSection',
+          title: 'Team Section',
+          type: 'object',
+          fields: [
+            defineField({ name: 'type', type: 'string', initialValue: 'team' }),
+            defineField({ name: 'title', type: 'string' }),
+            defineField({
+              name: 'members',
+              type: 'array',
+              of: [
+                defineType({
+                  name: 'teamMember',
+                  title: 'Team Member',
+                  type: 'object',
+                  fields: [
+                    defineField({ name: 'name', type: 'string' }),
+                    defineField({ name: 'role', type: 'string' }),
+                    defineField({ name: 'bio', type: 'text' }),
+                    defineField({
+                      name: 'photo',
+                      type: 'image',
+                      options: { hotspot: true },
+                    }),
+                  ],
+                }),
+              ],
             }),
           ],
         }),

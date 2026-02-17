@@ -34,16 +34,20 @@ export async function fetchContentItems() {
   return sanityFetch<any[]>(query);
 }
 
-export async function fetchBlogPosts(publishedOnly = false) {
-  const filter = publishedOnly ? ' && published == true' : '';
-  const query = `*[_type == "blogPost"${filter}]|order(createdAt desc){
+export async function fetchBlogPosts() {
+  const query = `*[_type == "blogPost"]|order(createdAt desc){
     "id": _id,
     "slug": slug.current,
     title,
-    content,
+    "content": content[]{
+      ...,
+      asset->{
+        _id,
+        url
+      }
+    },
     excerpt,
     featured,
-    published,
     createdAt,
     updatedAt,
     author,
@@ -117,7 +121,14 @@ export async function fetchPages() {
       "mainImage": mainImage.asset->url,
       "mainImageUrl": mainImage.asset->url,
       "image": image.asset->url,
+      "titleImage": titleImage.asset->url,
       "images": images[]{ "url": asset->url },
+      "members": members[]{
+        name,
+        role,
+        bio,
+        "photo": photo.asset->url
+      },
       description,
       "courses": courses[]->{
         "id": _id,

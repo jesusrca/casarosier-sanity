@@ -147,9 +147,16 @@ export function NotFound() {
                           {item.title}
                         </h4>
                         {item.shortDescription && (
-                          <p className="text-foreground/70 text-sm line-clamp-2 mb-4">
-                            {item.shortDescription}
-                          </p>
+                          /<\/?[a-z][\s\S]*>/i.test(item.shortDescription) ? (
+                            <p
+                              className="text-foreground/70 text-sm line-clamp-2 mb-4"
+                              dangerouslySetInnerHTML={{ __html: item.shortDescription }}
+                            />
+                          ) : (
+                            <p className="text-foreground/70 text-sm line-clamp-2 mb-4">
+                              {item.shortDescription}
+                            </p>
+                          )
                         )}
                         <span className="inline-flex items-center gap-2 text-primary text-sm hover:gap-3 transition-all">
                           Ver detalles

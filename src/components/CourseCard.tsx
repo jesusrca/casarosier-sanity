@@ -11,6 +11,8 @@ interface CourseCardProps {
 }
 
 export function CourseCard({ title, subtitle, image, link = '#', index, hideSubtitle = false }: CourseCardProps) {
+  const subtitleLooksLikeHtml = /<\/?[a-z][\s\S]*>/i.test(subtitle);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -34,7 +36,16 @@ export function CourseCard({ title, subtitle, image, link = '#', index, hideSubt
         {/* Text Content Below Image */}
         <div className="mt-4 text-center">
           <h3 className="mb-1">{title}</h3>
-          {!hideSubtitle && <p className="text-foreground/60 text-sm mb-2">{subtitle}</p>}
+          {!hideSubtitle && (
+            subtitleLooksLikeHtml ? (
+              <p
+                className="text-foreground/60 text-sm mb-2"
+                dangerouslySetInnerHTML={{ __html: subtitle }}
+              />
+            ) : (
+              <p className="text-foreground/60 text-sm mb-2">{subtitle}</p>
+            )
+          )}
           <span className="text-sm text-primary group-hover:underline">Ver más</span>
         </div>
       </Link>
