@@ -2,6 +2,7 @@ import { Check, MessageCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { PortableText } from '@portabletext/react';
 import { useContent } from '../contexts/ContentContext';
 import { useWhatsApp } from '../contexts/WhatsAppContext';
 import { SEOHead } from '../components/SEOHead';
@@ -18,7 +19,7 @@ interface ContentItem {
   slug: string;
   subtitle?: string;
   shortDescription?: string;
-  description?: string;
+  description?: string | any[];
   price?: number;
   duration?: string;
   includes?: string[];
@@ -64,6 +65,7 @@ interface ContentItem {
     showHeroCTA?: boolean;
   };
   visible: boolean;
+  showPaymentMethods?: boolean;
   seo?: {
     metaTitle?: string;
     metaDescription?: string;
@@ -72,6 +74,18 @@ interface ContentItem {
   heroImage?: string | { url: string; alt?: string; description?: string };
   titleImage?: string | { url: string; alt?: string; description?: string };
   whatsappNumber?: string;
+}
+
+function portableTextToPlainText(value: any): string {
+  if (!Array.isArray(value)) return '';
+  return value
+    .map((block: any) => {
+      if (!block || block._type !== 'block' || !Array.isArray(block.children)) return '';
+      return block.children.map((child: any) => child?.text || '').join('');
+    })
+    .filter(Boolean)
+    .join(' ')
+    .trim();
 }
 
 export function DynamicContentPage() {
@@ -206,11 +220,17 @@ export function DynamicContentPage() {
     window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
+  const seoDescription =
+    content.seo?.metaDescription ||
+    (typeof content.description === 'string'
+      ? content.description
+      : portableTextToPlainText(content.description));
+
   return (
     <div className="min-h-screen">
       <SEOHead
         title={content.seo?.metaTitle || content.title}
-        description={content.seo?.metaDescription || content.description}
+        description={seoDescription}
         keywords={content.seo?.keywords}
       />
 
@@ -291,10 +311,18 @@ export function DynamicContentPage() {
                   />
                 )}
                 {content.description && (
-                  <div 
-                    className="text-base leading-relaxed text-foreground/80 space-y-4"
-                    dangerouslySetInnerHTML={{ __html: content.description }}
-                  />
+                  <>
+                    {typeof content.description === 'string' ? (
+                      <div
+                        className="text-base leading-relaxed text-foreground/80 space-y-4"
+                        dangerouslySetInnerHTML={{ __html: content.description }}
+                      />
+                    ) : (
+                      <div className="text-base leading-relaxed text-foreground/80 space-y-4">
+                        <PortableText value={content.description} />
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -444,62 +472,60 @@ export function DynamicContentPage() {
                 className="space-y-6"
               >
                 {/* Payment Methods */}
-                {content.content?.paymentMethods && (
+                {(content.showPaymentMethods !== false) && settings?.paymentMethods && Object.values(settings.paymentMethods).some((enabled: any) => enabled) && (
                   <div className="space-y-4">
                     <h3 className="text-xl mb-3">MÉTODOS DE PAGO</h3>
                     <div className="space-y-6">
                       <p className="text-base text-foreground/80">
-                        {content.content.paymentMethods}
+                        Puedes pagar con cualquiera de los siguientes métodos:
                       </p>
-                      {settings?.paymentMethods && Object.values(settings.paymentMethods).some((enabled: any) => enabled) && (
-                        <div className="flex flex-wrap gap-3 items-center">
-                          {settings.paymentMethods.transferencia && (
-                            <>
-                              <span className="text-sm text-foreground/60 border-b border-foreground/20 pb-1">
-                                Transferencia bancaria
-                              </span>
-                              {(settings.paymentMethods.paypal || settings.paymentMethods.tarjeta || settings.paymentMethods.efectivo || settings.paymentMethods.bizum) && (
-                                <span className="text-foreground/20">·</span>
-                              )}
-                            </>
-                          )}
-                          {settings.paymentMethods.paypal && (
-                            <>
-                              <span className="text-sm text-foreground/60 border-b border-foreground/20 pb-1">
-                                PayPal
-                              </span>
-                              {(settings.paymentMethods.tarjeta || settings.paymentMethods.efectivo || settings.paymentMethods.bizum) && (
-                                <span className="text-foreground/20">·</span>
-                              )}
-                            </>
-                          )}
-                          {settings.paymentMethods.tarjeta && (
-                            <>
-                              <span className="text-sm text-foreground/60 border-b border-foreground/20 pb-1">
-                                Tarjeta de crédito
-                              </span>
-                              {(settings.paymentMethods.efectivo || settings.paymentMethods.bizum) && (
-                                <span className="text-foreground/20">·</span>
-                              )}
-                            </>
-                          )}
-                          {settings.paymentMethods.efectivo && (
-                            <>
-                              <span className="text-sm text-foreground/60 border-b border-foreground/20 pb-1">
-                                Efectivo
-                              </span>
-                              {settings.paymentMethods.bizum && (
-                                <span className="text-foreground/20">·</span>
-                              )}
-                            </>
-                          )}
-                          {settings.paymentMethods.bizum && (
+                      <div className="flex flex-wrap gap-3 items-center">
+                        {settings.paymentMethods.transferencia && (
+                          <>
                             <span className="text-sm text-foreground/60 border-b border-foreground/20 pb-1">
-                              Bizum
+                              Transferencia bancaria
                             </span>
-                          )}
-                        </div>
-                      )}
+                            {(settings.paymentMethods.paypal || settings.paymentMethods.tarjeta || settings.paymentMethods.efectivo || settings.paymentMethods.bizum) && (
+                              <span className="text-foreground/20">·</span>
+                            )}
+                          </>
+                        )}
+                        {settings.paymentMethods.paypal && (
+                          <>
+                            <span className="text-sm text-foreground/60 border-b border-foreground/20 pb-1">
+                              PayPal
+                            </span>
+                            {(settings.paymentMethods.tarjeta || settings.paymentMethods.efectivo || settings.paymentMethods.bizum) && (
+                              <span className="text-foreground/20">·</span>
+                            )}
+                          </>
+                        )}
+                        {settings.paymentMethods.tarjeta && (
+                          <>
+                            <span className="text-sm text-foreground/60 border-b border-foreground/20 pb-1">
+                              Tarjeta de crédito
+                            </span>
+                            {(settings.paymentMethods.efectivo || settings.paymentMethods.bizum) && (
+                              <span className="text-foreground/20">·</span>
+                            )}
+                          </>
+                        )}
+                        {settings.paymentMethods.efectivo && (
+                          <>
+                            <span className="text-sm text-foreground/60 border-b border-foreground/20 pb-1">
+                              Efectivo
+                            </span>
+                            {settings.paymentMethods.bizum && (
+                              <span className="text-foreground/20">·</span>
+                            )}
+                          </>
+                        )}
+                        {settings.paymentMethods.bizum && (
+                          <span className="text-sm text-foreground/60 border-b border-foreground/20 pb-1">
+                            Bizum
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}

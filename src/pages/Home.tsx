@@ -34,9 +34,14 @@ export function Home() {
 
   const loadFeaturedCourses = async () => {
     try {
-      // Combinar clases y workshops, filtrar por showInHome
+      // Destacados de Home para bloque 1 (no workshops)
       const allItems = [...classes, ...workshops];
-      const featured = allItems.filter((item: any) => item.showInHome === true && item.visible === true);
+      const featured = allItems.filter(
+        (item: any) =>
+          item.featuredInHome === true &&
+          item.visible !== false &&
+          item.type !== 'workshop'
+      );
       
       // Convertir a formato de CourseCard
       const formattedCourses = featured.map((item: any) => {
@@ -69,9 +74,14 @@ export function Home() {
 
   const loadFeaturedWorkshops = async () => {
     try {
-      // Combinar clases y workshops, filtrar por showInHomeWorkshops
+      // Destacados de Home para bloque 2 (solo workshops)
       const allItems = [...classes, ...workshops];
-      const featured = allItems.filter((item: any) => item.showInHomeWorkshops === true && item.visible === true);
+      const featured = allItems.filter(
+        (item: any) =>
+          item.featuredInHome === true &&
+          item.visible !== false &&
+          item.type === 'workshop'
+      );
       
       // Convertir a formato de CourseCard
       const formattedWorkshops = featured.map((item: any) => {
@@ -218,7 +228,7 @@ export function Home() {
       </section>
 
       {/* Courses Section - Cursos y workshops */}
-      {featuredCourses.length > 0 && (
+      {coursesCards.length > 0 && (
         <section className="py-16 lg:py-24 bg-white">
           <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
             <motion.div
@@ -256,7 +266,7 @@ export function Home() {
       )}
 
       {/* Courses Section 2 - Workshops */}
-      {featuredWorkshops.length > 0 && (
+      {courses2Cards.length > 0 && (
         <section className="py-16 lg:py-24 bg-white">
           <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
             <motion.div

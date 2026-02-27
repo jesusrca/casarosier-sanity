@@ -90,7 +90,7 @@ export const page = defineType({
             defineField({
               name: 'courses',
               type: 'array',
-              of: [{ type: 'reference', to: [{ type: 'curso' }] }],
+              of: [{ type: 'reference', to: [{ type: 'classContent' }, { type: 'workshopContent' }, { type: 'privateReservationContent' }, { type: 'giftCardContent' }, { type: 'curso' }] }],
             }),
           ],
         }),
@@ -111,7 +111,7 @@ export const page = defineType({
             defineField({
               name: 'courses',
               type: 'array',
-              of: [{ type: 'reference', to: [{ type: 'curso' }] }],
+              of: [{ type: 'reference', to: [{ type: 'classContent' }, { type: 'workshopContent' }, { type: 'privateReservationContent' }, { type: 'giftCardContent' }, { type: 'curso' }] }],
             }),
           ],
         }),

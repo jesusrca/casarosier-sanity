@@ -8,7 +8,7 @@ interface ContentItem {
   slug: string;
   subtitle?: string;
   shortDescription?: string;
-  description?: string;
+  description?: string | any[];
   price?: number;
   duration?: string;
   includes?: string[];
@@ -16,6 +16,7 @@ interface ContentItem {
   schedule?: any;
   content?: any;
   visible: boolean;
+  showPaymentMethods?: boolean;
   seo?: any;
   heroImage?: string;
   titleImage?: string;
@@ -185,14 +186,14 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       // Separar clases, workshops y privados
       const allItems = contentResponse || [];
       const visibleClasses = allItems
-        .filter((item: ContentItem) => item.type === 'class' && item.visible)
+        .filter((item: ContentItem) => item.type === 'class' && item.visible !== false)
         .map((item: ContentItem) => ({
           ...item,
           slug: mapClassSlugToLegacy(item.slug),
         }));
-      const visibleWorkshops = allItems.filter((item: ContentItem) => item.type === 'workshop' && item.visible);
-      const visiblePrivates = allItems.filter((item: ContentItem) => item.type === 'private' && item.visible);
-      const visibleGiftCards = allItems.filter((item: ContentItem) => item.type === 'gift-card' && item.visible);
+      const visibleWorkshops = allItems.filter((item: ContentItem) => item.type === 'workshop' && item.visible !== false);
+      const visiblePrivates = allItems.filter((item: ContentItem) => item.type === 'private' && item.visible !== false);
+      const visibleGiftCards = allItems.filter((item: ContentItem) => item.type === 'gift-card' && item.visible !== false);
       
       setClasses(visibleClasses);
       setWorkshops(visibleWorkshops);

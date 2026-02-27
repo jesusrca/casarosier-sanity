@@ -1,9 +1,18 @@
 import { sanityFetch } from './sanity';
 
 export async function fetchContentItems() {
-  const query = `*[_type == "curso"]{
+  const query = `*[_type in ["classContent", "workshopContent", "privateReservationContent", "giftCardContent"]]{
     "id": _id,
-    type,
+    "type": coalesce(
+      type,
+      select(
+        _type == "classContent" => "class",
+        _type == "workshopContent" => "workshop",
+        _type == "privateReservationContent" => "private",
+        _type == "giftCardContent" => "gift-card",
+        "class"
+      )
+    ),
     title,
     "slug": slug.current,
     subtitle,
@@ -15,9 +24,9 @@ export async function fetchContentItems() {
     schedule,
     content,
     visible,
+    showPaymentMethods,
     seo,
-    showInHome,
-    showInHomeWorkshops,
+    featuredInHome,
     menuLocations,
     whatsappNumber,
     createdAt,
